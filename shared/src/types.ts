@@ -23,12 +23,13 @@ export interface RegisterData {
 }
 
 // Exam Component Types
-export type ComponentType = 'text' | 'table' | 'qcm' | 'image' | 'header' | 'trueFalse' | 'fillInBlanks' | 'writingArea' | 'exerciseHeader';
+export type ComponentType = 'text' | 'table' | 'qcm' | 'image' | 'header' | 'trueFalse' | 'fillInBlanks' | 'writingArea' | 'exerciseHeader' | 'pageBreak';
 
 export interface BaseComponent {
   id: string;
   type: ComponentType;
   order: number;
+  isFavorite?: boolean; // For question bank favorites
 }
 
 export interface HeaderComponent extends BaseComponent {
@@ -75,6 +76,7 @@ export interface QCMComponent extends BaseComponent {
   multipleAnswers: boolean;
   points?: number;
   latex?: boolean;
+  columns?: 1 | 2; // Multi-column layout for options
 }
 
 export interface ImageComponent extends BaseComponent {
@@ -119,6 +121,11 @@ export interface ExerciseHeaderComponent extends BaseComponent {
   points: number;
 }
 
+// Page Break Component
+export interface PageBreakComponent extends BaseComponent {
+  type: 'pageBreak';
+}
+
 export type ExamComponent = 
   | HeaderComponent 
   | TextComponent 
@@ -128,7 +135,8 @@ export type ExamComponent =
   | TrueFalseComponent
   | FillInBlanksComponent
   | WritingAreaComponent
-  | ExerciseHeaderComponent;
+  | ExerciseHeaderComponent
+  | PageBreakComponent;
 
 // Exam Types
 export interface Exam {
@@ -207,6 +215,9 @@ export interface PDFExportOptions {
   orientation: 'portrait' | 'landscape';
   includeAnswers: boolean;
   correctionGrid: boolean;
+  hidePoints?: boolean; // Mode "Examen Blanc"
+  watermark?: string; // Filigrane (BROUILLON, CONFIDENTIEL, etc.)
+  autoNumbering?: boolean; // Numérotation automatique
 }
 
 export interface CorrectionGrid {

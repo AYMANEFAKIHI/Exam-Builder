@@ -95,19 +95,31 @@ export default function QCMComponentEditor({ data, onChange, onDelete, onDuplica
 
         {/* Options */}
         <div>
-          <div className="flex justify-between items-center mb-2">
+          <div className="flex flex-wrap justify-between items-center mb-2 gap-2">
             <label className="block text-sm font-medium text-gray-700">
               Answer Options
             </label>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={data.multipleAnswers}
-                onChange={(e) => handleChange('multipleAnswers', e.target.checked)}
-                className="rounded"
-              />
-              <span className="text-sm">Multiple correct answers</span>
-            </label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={data.multipleAnswers}
+                  onChange={(e) => handleChange('multipleAnswers', e.target.checked)}
+                  className="rounded"
+                />
+                <span className="text-sm">Multiple correct answers</span>
+              </label>
+              <label className="flex items-center space-x-2">
+                <select
+                  value={data.columns || 1}
+                  onChange={(e) => handleChange('columns', parseInt(e.target.value) as 1 | 2)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value={1}>1 colonne</option>
+                  <option value={2}>2 colonnes</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           <div className="space-y-3">

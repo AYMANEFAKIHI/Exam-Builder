@@ -3,6 +3,13 @@ import html2canvas from 'html2canvas';
 import katex from 'katex';
 import { ExamComponent } from '../../../shared/src/types';
 
+// PDF Export Options interface
+interface PDFExportOptions {
+  hidePoints?: boolean;
+  watermark?: string;
+  autoNumbering?: boolean;
+}
+
 // Helper function to process LaTeX in text
 const processLatex = (text: string): string => {
   let result = text;
@@ -36,7 +43,9 @@ const processLatex = (text: string): string => {
   return result;
 };
 
-export const generatePDF = async (title: string, components: ExamComponent[]) => {
+export const generatePDF = async (title: string, components: ExamComponent[], options: PDFExportOptions = {}) => {
+  const { hidePoints = false, watermark = '', autoNumbering = true } = options;
+  
   try {
     // Create a temporary container for rendering
     const container = document.createElement('div');
@@ -49,7 +58,7 @@ export const generatePDF = async (title: string, components: ExamComponent[]) =>
     document.body.appendChild(container);
 
     // Render components to HTML
-    const html = await renderComponentsToHTML(title, components);
+    const html = await renderComponentsToHTML(title, components, { hidePoints, watermark, autoNumbering });
     container.innerHTML = html;
 
     // Wait for MathJax to render if present
@@ -72,34 +81,97 @@ export const generatePDF = async (title: string, components: ExamComponent[]) =>
       )
     );
 
-    // Generate PDF
-    const canvas = await html2canvas(container, {
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    });
+    // Handle page breaks - split content into pages
+    const pageBreaks = container.querySelectorAll('.page-break');
+    const pages: HTMLElement[] = [];
+    
+    if (pageBreaks.length > 0) {
+      // Split content by page breaks
+      let currentPage = document.createElement('div');
+      currentPage.style.width = '210mm';
+      currentPage.style.padding = '20mm';
+      currentPage.style.backgroundColor = 'white';
+      
+      const children = Array.from(container.children);
+      for (const child of children) {
+        if ((child as HTMLElement).classList.contains('page-break')) {
+          pages.push(currentPage);
+          currentPage = document.createElement('div');
+          currentPage.style.width = '210mm';
+          currentPage.style.padding = '20mm';
+          currentPage.style.backgroundColor = 'white';
+        } else {
+          currentPage.appendChild(child.cloneNode(true));
+        }
+      }
+      pages.push(currentPage);
+    } else {
+      pages.push(container);
+    }
 
-    const imgData = canvas.toDataURL('image/png');
+    // Generate PDF
     const pdf = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
       format: 'a4',
     });
 
-    const imgWidth = 210; // A4 width in mm
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-    const pageHeight = 297; // A4 height in mm
-    let heightLeft = imgHeight;
-    let position = 0;
+    for (let i = 0; i < pages.length; i++) {
+      const pageContainer = pages[i];
+      if (pageContainer !== container) {
+        document.body.appendChild(pageContainer);
+      }
 
-    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+      const canvas = await html2canvas(pageContainer, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
 
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      pdf.addPage();
+      const imgData = canvas.toDataURL('image/png');
+      const imgWidth = 210; // A4 width in mm
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const pageHeight = 297; // A4 height in mm
+      let heightLeft = imgHeight;
+      let position = 0;
+
+      if (i > 0) {
+        pdf.addPage();
+      }
+
       pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      // Add watermark to all pages if specified
+      if (watermark) {
+        const totalPages = pdf.getNumberOfPages();
+        for (let page = 1; page <= totalPages; page++) {
+          pdf.setPage(page);
+          pdf.setTextColor(200, 200, 200);
+          pdf.setFontSize(60);
+          pdf.saveGraphicsState();
+          // Rotate text for diagonal watermark
+          const centerX = 105;
+          const centerY = 148.5;
+          pdf.text(watermark, centerX, centerY, {
+            align: 'center',
+            angle: 45,
+          });
+          pdf.restoreGraphicsState();
+          pdf.setTextColor(0, 0, 0);
+        }
+      }
+
+      if (pageContainer !== container) {
+        document.body.removeChild(pageContainer);
+      }
     }
 
     // Clean up
@@ -114,7 +186,14 @@ export const generatePDF = async (title: string, components: ExamComponent[]) =>
   }
 };
 
-const renderComponentsToHTML = async (title: string, components: ExamComponent[]): Promise<string> => {
+const renderComponentsToHTML = async (
+  title: string, 
+  components: ExamComponent[], 
+  options: PDFExportOptions = {}
+): Promise<string> => {
+  const { hidePoints = false, autoNumbering = true } = options;
+  let questionNumber = 0;
+  
   // Include KaTeX CSS
   const katexCSS = Array.from(document.querySelectorAll('link[href*="katex"]'))
     .map(link => {
@@ -137,11 +216,27 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
         .component { margin: 20px 0; page-break-inside: avoid; }
         .header { border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
         .points { float: right; font-weight: bold; }
+        .page-break { page-break-after: always; height: 0; margin: 0; padding: 0; }
+        .question-number { font-weight: bold; margin-right: 8px; }
+        .qcm-options-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       </style>
   `;
 
   for (const component of components) {
+    // Handle page break component
+    if (component.type === 'pageBreak') {
+      html += '<div class="page-break"></div>';
+      continue;
+    }
+    
     html += '<div class="component">';
+    
+    // Auto-numbering for question types
+    const isQuestion = ['text', 'qcm', 'trueFalse', 'fillInBlanks'].includes(component.type) && 
+                       'points' in component && (component as any).points > 0;
+    if (autoNumbering && isQuestion) {
+      questionNumber++;
+    }
     
     switch (component.type) {
       case 'header':
@@ -162,7 +257,8 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
       case 'text':
         html += `
           <div>
-            ${component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
+            ${!hidePoints && component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
+            ${autoNumbering && isQuestion ? `<span class="question-number">Q${questionNumber}.</span>` : ''}
             <div>${component.content}</div>
           </div>
         `;
@@ -170,7 +266,7 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
 
       case 'table':
         html += `
-          ${component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
+          ${!hidePoints && component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
           <table>
             <thead>
               <tr>
@@ -190,11 +286,15 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
 
       case 'qcm':
         const qcmQuestion = component.latex ? processLatex(component.question) : component.question;
+        const columnsClass = component.columns === 2 ? 'qcm-options-2col' : '';
         html += `
           <div>
-            ${component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
-            <p style="font-weight: bold; margin-bottom: 10px;">${qcmQuestion}</p>
-            <div>
+            ${!hidePoints && component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
+            <p style="font-weight: bold; margin-bottom: 10px;">
+              ${autoNumbering && isQuestion ? `<span class="question-number">Q${questionNumber}.</span>` : ''}
+              ${qcmQuestion}
+            </p>
+            <div class="${columnsClass}">
               ${component.options.map((option, idx) => {
                 const optionText = option.latex ? processLatex(option.text) : option.text;
                 return `
@@ -227,9 +327,11 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
             <h2 style="margin: 0; font-size: 20px; font-weight: bold;">
               Exercice ${component.exerciseNumber}${component.title ? ` : ${component.title}` : ''}
             </h2>
-            <div style="background: #4f46e5; color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 18px;">
-              / ${component.points} pts
-            </div>
+            ${!hidePoints ? `
+              <div style="background: #4f46e5; color: white; padding: 8px 16px; border-radius: 6px; font-weight: bold; font-size: 18px;">
+                / ${component.points} pts
+              </div>
+            ` : ''}
           </div>
         `;
         break;

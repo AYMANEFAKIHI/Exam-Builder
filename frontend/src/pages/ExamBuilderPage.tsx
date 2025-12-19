@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useExamStore } from '../store/examStore';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ExamComponent, ComponentType } from '../../../shared/src/types';
-import { Save, Download, Plus, GripVertical } from 'lucide-react';
+import { Save, Download, Plus, GripVertical, Scissors } from 'lucide-react';
 import HeaderComponentEditor from '../components/exam/HeaderComponentEditor';
 import TextComponentEditor from '../components/exam/TextComponentEditor';
 import TableComponentEditor from '../components/exam/TableComponentEditor';
@@ -13,8 +13,13 @@ import TrueFalseComponentEditor from '../components/exam/TrueFalseComponentEdito
 import FillInBlanksComponentEditor from '../components/exam/FillInBlanksComponentEditor';
 import WritingAreaComponentEditor from '../components/exam/WritingAreaComponentEditor';
 import ExerciseHeaderComponentEditor from '../components/exam/ExerciseHeaderComponentEditor';
+import PageBreakComponentEditor from '../components/exam/PageBreakComponentEditor';
 import ExamSummary from '../components/exam/ExamSummary';
 import { generatePDF } from '../utils/pdfGenerator';
+import { toast } from 'react-toastify';
+
+// Auto-save key for localStorage
+const AUTO_SAVE_KEY = 'exam_builder_autosave';
 
 export default function ExamBuilderPage() {
   const { id } = useParams();
@@ -22,6 +27,66 @@ export default function ExamBuilderPage() {
   const { currentExam, fetchExam, createExam, updateExam, setCurrentExam, updateComponents } = useExamStore();
   const [title, setTitle] = useState('Untitled Exam');
   const [components, setComponents] = useState<ExamComponent[]>([]);
+  
+  // Export options state
+  const [showExportOptions, setShowExportOptions] = useState(false);
+  const [hidePoints, setHidePoints] = useState(false);
+  const [watermark, setWatermark] = useState('');
+  const [autoNumbering, setAutoNumbering] = useState(true);
+  
+  // Auto-save indicator
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Auto-save to localStorage
+  const autoSave = useCallback(() => {
+    const autoSaveData = {
+      id: id || 'new',
+      title,
+      components,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(AUTO_SAVE_KEY, JSON.stringify(autoSaveData));
+    setLastSaved(new Date());
+  }, [id, title, components]);
+
+  // Auto-save every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(autoSave, 30000);
+    return () => clearInterval(interval);
+  }, [autoSave]);
+
+  // Save on component/title change (debounced)
+  useEffect(() => {
+    const timeout = setTimeout(autoSave, 2000);
+    return () => clearTimeout(timeout);
+  }, [title, components, autoSave]);
+
+  // Restore from auto-save on mount
+  useEffect(() => {
+    const savedData = localStorage.getItem(AUTO_SAVE_KEY);
+    if (savedData && (!id || id === 'new')) {
+      try {
+        const parsed = JSON.parse(savedData);
+        if (parsed.id === (id || 'new') && parsed.components?.length > 0) {
+          const savedTime = new Date(parsed.savedAt);
+          const timeDiff = Date.now() - savedTime.getTime();
+          // Only restore if saved within last 24 hours
+          if (timeDiff < 24 * 60 * 60 * 1000) {
+            const restore = window.confirm(
+              `Une sauvegarde automatique a été trouvée (${savedTime.toLocaleString()}). Voulez-vous la restaurer ?`
+            );
+            if (restore) {
+              setTitle(parsed.title);
+              setComponents(parsed.components);
+              toast.info('Brouillon restauré');
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse auto-save data:', e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     if (id && id !== 'new') {
@@ -64,7 +129,7 @@ export default function ExamBuilderPage() {
       alert('Add components to your exam before exporting');
       return;
     }
-    await generatePDF(title, components);
+    await generatePDF(title, components, { hidePoints, watermark, autoNumbering });
   };
 
   const addComponent = (type: ComponentType) => {
@@ -123,6 +188,7 @@ export default function ExamBuilderPage() {
           multipleAnswers: false,
           points: 0,
           latex: false,
+          columns: 1,
         };
       case 'image':
         return {
@@ -166,6 +232,11 @@ export default function ExamBuilderPage() {
           exerciseNumber: 1,
           title: '',
           points: 0,
+        };
+      case 'pageBreak':
+        return {
+          ...baseComponent,
+          type: 'pageBreak',
         };
       default:
         throw new Error(`Unknown component type: ${type}`);
@@ -296,6 +367,15 @@ export default function ExamBuilderPage() {
             onDuplicate={() => duplicateComponent(index)}
           />
         );
+      case 'pageBreak':
+        return (
+          <PageBreakComponentEditor
+            data={component}
+            onChange={(data) => updateComponent(index, data)}
+            onDelete={() => deleteComponent(index)}
+            onDuplicate={() => duplicateComponent(index)}
+          />
+        );
       default:
         return null;
     }
@@ -316,19 +396,95 @@ export default function ExamBuilderPage() {
             className="text-3xl font-bold text-gray-900 border-b-2 border-transparent hover:border-gray-300 focus:border-primary-500 outline-none w-full"
             placeholder="Exam Title"
           />
-          <p className="text-sm text-gray-600 mt-2">
-            Total Points: <span className="font-semibold">{totalPoints}</span>
-          </p>
+          <div className="flex items-center space-x-4 mt-2">
+            <p className="text-sm text-gray-600">
+              Total Points: <span className="font-semibold">{totalPoints}</span>
+            </p>
+            {lastSaved && (
+              <p className="text-xs text-green-600">
+                ✓ Auto-saved at {lastSaved.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
         </div>
         <div className="flex space-x-3">
           <button onClick={handleSave} className="btn btn-primary flex items-center space-x-2">
             <Save className="w-5 h-5" />
             <span>Save</span>
           </button>
-          <button onClick={handleExportPDF} className="btn btn-secondary flex items-center space-x-2">
-            <Download className="w-5 h-5" />
-            <span>Export PDF</span>
-          </button>
+          
+          {/* Export with Options */}
+          <div className="relative">
+            <button 
+              onClick={() => setShowExportOptions(!showExportOptions)} 
+              className="btn btn-secondary flex items-center space-x-2"
+            >
+              <Download className="w-5 h-5" />
+              <span>Export PDF</span>
+            </button>
+            
+            {showExportOptions && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border p-4 z-50">
+                <h4 className="font-semibold mb-3">Options d'Export</h4>
+                
+                <div className="space-y-3">
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={autoNumbering}
+                      onChange={(e) => setAutoNumbering(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Numérotation automatique</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={hidePoints}
+                      onChange={(e) => setHidePoints(e.target.checked)}
+                      className="rounded"
+                    />
+                    <span className="text-sm">Mode Examen Blanc (masquer points)</span>
+                  </label>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Filigrane</label>
+                    <select
+                      value={watermark}
+                      onChange={(e) => setWatermark(e.target.value)}
+                      className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                    >
+                      <option value="">Aucun</option>
+                      <option value="BROUILLON">BROUILLON</option>
+                      <option value="CONFIDENTIEL">CONFIDENTIEL</option>
+                      <option value="COPIE">COPIE</option>
+                      <option value="NE PAS DIFFUSER">NE PAS DIFFUSER</option>
+                    </select>
+                  </div>
+                  
+                  <div className="flex space-x-2 pt-2">
+                    <button
+                      onClick={() => {
+                        handleExportPDF();
+                        setShowExportOptions(false);
+                      }}
+                      className="btn btn-primary flex-1 text-sm"
+                    >
+                      Exporter
+                    </button>
+                    <button
+                      onClick={() => setShowExportOptions(false)}
+                      className="btn btn-secondary text-sm"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <button
             onClick={async () => {
               const { generateCorrectionGrid } = await import('../utils/pdfGenerator');
@@ -337,7 +493,7 @@ export default function ExamBuilderPage() {
             className="btn btn-secondary flex items-center space-x-2"
           >
             <Download className="w-5 h-5" />
-            <span>Correction Grid</span>
+            <span>Grille Correction</span>
           </button>
         </div>
       </div>
@@ -412,6 +568,16 @@ export default function ExamBuilderPage() {
               >
                 <Plus className="w-4 h-4" />
                 <span>Zone de Rédaction</span>
+              </button>
+              
+              <hr className="my-3 border-gray-300" />
+              <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Mise en Page</p>
+              <button
+                onClick={() => addComponent('pageBreak')}
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-orange-50 text-orange-700"
+              >
+                <Scissors className="w-4 h-4" />
+                <span>Saut de Page</span>
               </button>
             </div>
           </div>
