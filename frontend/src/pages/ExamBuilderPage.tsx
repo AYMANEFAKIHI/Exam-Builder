@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useExamStore } from '../store/examStore';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ExamComponent, ComponentType } from '../../../shared/src/types';
@@ -28,8 +29,9 @@ const AUTO_SAVE_KEY = 'exam_builder_autosave';
 export default function ExamBuilderPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { currentExam, fetchExam, createExam, updateExam, setCurrentExam, updateComponents } = useExamStore();
-  const [title, setTitle] = useState('Untitled Exam');
+  const [title, setTitle] = useState(t('editor.untitled'));
   const [components, setComponents] = useState<ExamComponent[]>([]);
   
   // Export options state
@@ -83,12 +85,12 @@ export default function ExamBuilderPage() {
           // Only restore if saved within last 24 hours
           if (timeDiff < 24 * 60 * 60 * 1000) {
             const restore = window.confirm(
-              `Une sauvegarde automatique a été trouvée (${savedTime.toLocaleString()}). Voulez-vous la restaurer ?`
+              `${t('editor.restoreTitle')} (${savedTime.toLocaleString()}). ${t('editor.restoreConfirm')}`
             );
             if (restore) {
               setTitle(parsed.title);
               setComponents(parsed.components);
-              toast.info('Brouillon restauré');
+              toast.info(t('editor.draftRestored'));
             }
           }
         }
@@ -104,7 +106,7 @@ export default function ExamBuilderPage() {
     } else {
       setCurrentExam(null);
       setComponents([]);
-      setTitle('Untitled Exam');
+      setTitle(t('editor.untitled'));
     }
   }, [id]);
 
@@ -136,7 +138,7 @@ export default function ExamBuilderPage() {
 
   const handleExportPDF = async () => {
     if (components.length === 0) {
-      alert('Add components to your exam before exporting');
+      alert(t('editor.addComponentsAlert'));
       return;
     }
     await generatePDF(title, components, { hidePoints, watermark, autoNumbering });
@@ -467,82 +469,82 @@ export default function ExamBuilderPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-8">
-        <div className="flex-1 mr-4">
+        <div className="flex-1 mr-4 rtl:mr-0 rtl:ml-4">
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="text-3xl font-bold text-gray-900 border-b-2 border-transparent hover:border-gray-300 focus:border-primary-500 outline-none w-full"
-            placeholder="Exam Title"
+            className="text-3xl font-bold text-gray-900 dark:text-white border-b-2 border-transparent hover:border-gray-300 dark:hover:border-slate-600 focus:border-primary-500 outline-none w-full bg-transparent"
+            placeholder={t('editor.examTitle')}
           />
-          <div className="flex items-center space-x-4 mt-2">
-            <p className="text-sm text-gray-600">
-              Total Points: <span className="font-semibold">{totalPoints}</span>
+          <div className="flex items-center space-x-4 rtl:space-x-reverse mt-2">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {t('editor.totalPoints')}: <span className="font-semibold">{totalPoints}</span>
             </p>
             {lastSaved && (
-              <p className="text-xs text-green-600">
-                ✓ Auto-saved at {lastSaved.toLocaleTimeString()}
+              <p className="text-xs text-green-600 dark:text-green-400">
+                ✓ {t('editor.autoSaved')} {lastSaved.toLocaleTimeString()}
               </p>
             )}
           </div>
         </div>
-        <div className="flex space-x-3">
-          <button onClick={handleSave} className="btn btn-primary flex items-center space-x-2">
+        <div className="flex space-x-3 rtl:space-x-reverse">
+          <button onClick={handleSave} className="btn btn-primary flex items-center space-x-2 rtl:space-x-reverse">
             <Save className="w-5 h-5" />
-            <span>Save</span>
+            <span>{t('editor.save')}</span>
           </button>
           
           {/* Export with Options */}
           <div className="relative">
             <button 
               onClick={() => setShowExportOptions(!showExportOptions)} 
-              className="btn btn-secondary flex items-center space-x-2"
+              className="btn btn-secondary flex items-center space-x-2 rtl:space-x-reverse"
             >
               <Download className="w-5 h-5" />
-              <span>Export PDF</span>
+              <span>{t('editor.export')}</span>
             </button>
             
             {showExportOptions && (
-              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-xl border p-4 z-50">
-                <h4 className="font-semibold mb-3">Options d'Export</h4>
+              <div className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-72 bg-white dark:bg-slate-800 rounded-lg shadow-xl border dark:border-slate-700 p-4 z-50">
+                <h4 className="font-semibold mb-3 dark:text-white">{t('editor.exportOptions')}</h4>
                 
                 <div className="space-y-3">
-                  <label className="flex items-center space-x-2">
+                  <label className="flex items-center space-x-2 rtl:space-x-reverse">
                     <input
                       type="checkbox"
                       checked={autoNumbering}
                       onChange={(e) => setAutoNumbering(e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-sm">Numérotation automatique</span>
+                    <span className="text-sm dark:text-gray-300">{t('editor.autoNumbering')}</span>
                   </label>
                   
-                  <label className="flex items-center space-x-2">
+                  <label className="flex items-center space-x-2 rtl:space-x-reverse">
                     <input
                       type="checkbox"
                       checked={hidePoints}
                       onChange={(e) => setHidePoints(e.target.checked)}
                       className="rounded"
                     />
-                    <span className="text-sm">Mode Examen Blanc (masquer points)</span>
+                    <span className="text-sm dark:text-gray-300">{t('editor.practiceMode')}</span>
                   </label>
                   
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Filigrane</label>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('editor.watermark')}</label>
                     <select
                       value={watermark}
                       onChange={(e) => setWatermark(e.target.value)}
-                      className="mt-1 block w-full rounded-md border-gray-300 text-sm"
+                      className="mt-1 block w-full rounded-md border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-white text-sm"
                     >
-                      <option value="">Aucun</option>
-                      <option value="BROUILLON">BROUILLON</option>
-                      <option value="CONFIDENTIEL">CONFIDENTIEL</option>
-                      <option value="COPIE">COPIE</option>
-                      <option value="NE PAS DIFFUSER">NE PAS DIFFUSER</option>
+                      <option value="">{t('editor.watermarkNone')}</option>
+                      <option value="BROUILLON">{t('editor.watermarkDraft')}</option>
+                      <option value="CONFIDENTIEL">{t('editor.watermarkConfidential')}</option>
+                      <option value="COPIE">{t('editor.watermarkCopy')}</option>
+                      <option value="NE PAS DIFFUSER">{t('editor.watermarkNoShare')}</option>
                     </select>
                   </div>
                   
-                  <div className="flex space-x-2 pt-2">
+                  <div className="flex space-x-2 rtl:space-x-reverse pt-2">
                     <button
                       onClick={() => {
                         handleExportPDF();
@@ -550,13 +552,13 @@ export default function ExamBuilderPage() {
                       }}
                       className="btn btn-primary flex-1 text-sm"
                     >
-                      Exporter
+                      {t('editor.exportBtn')}
                     </button>
                     <button
                       onClick={() => setShowExportOptions(false)}
                       className="btn btn-secondary text-sm"
                     >
-                      Annuler
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </div>
@@ -569,10 +571,10 @@ export default function ExamBuilderPage() {
               const { generateCorrectionGrid } = await import('../utils/pdfGenerator');
               await generateCorrectionGrid(title, components);
             }}
-            className="btn btn-secondary flex items-center space-x-2"
+            className="btn btn-secondary flex items-center space-x-2 rtl:space-x-reverse"
           >
             <Download className="w-5 h-5" />
-            <span>Grille Correction</span>
+            <span>{t('editor.correctionGrid')}</span>
           </button>
         </div>
       </div>
@@ -580,114 +582,114 @@ export default function ExamBuilderPage() {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Component Toolbar */}
         <div className="lg:col-span-1">
-          <div className="card sticky top-4">
-            <h3 className="text-lg font-semibold mb-4">Add Components</h3>
+          <div className="card dark:bg-slate-800 sticky top-4">
+            <h3 className="text-lg font-semibold mb-4 dark:text-white">{t('editor.addComponents')}</h3>
             <div className="space-y-2">
               <button
                 onClick={() => addComponent('header')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Header</span>
+                <span>{t('editor.header')}</span>
               </button>
               <button
                 onClick={() => addComponent('text')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Text Field</span>
+                <span>{t('editor.text')}</span>
               </button>
               <button
                 onClick={() => addComponent('table')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Table</span>
+                <span>{t('editor.table')}</span>
               </button>
               <button
                 onClick={() => addComponent('qcm')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>QCM</span>
+                <span>{t('editor.qcm')}</span>
               </button>
               <button
                 onClick={() => addComponent('image')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Image</span>
+                <span>{t('editor.image')}</span>
               </button>
-              <hr className="my-3 border-gray-300" />
-              <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Blocs Avancés</p>
+              <hr className="my-3 border-gray-300 dark:border-slate-600" />
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 px-2">{t('editor.advancedBlocks')}</p>
               <button
                 onClick={() => addComponent('exerciseHeader')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Exercice avec Barème</span>
+                <span>{t('editor.exerciseHeader')}</span>
               </button>
               <button
                 onClick={() => addComponent('trueFalse')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Vrai/Faux</span>
+                <span>{t('editor.trueFalse')}</span>
               </button>
               <button
                 onClick={() => addComponent('fillInBlanks')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Texte à Trous</span>
+                <span>{t('editor.fillBlanks')}</span>
               </button>
               <button
                 onClick={() => addComponent('writingArea')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-primary-50"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-primary-50 dark:hover:bg-slate-700"
               >
                 <Plus className="w-4 h-4" />
-                <span>Zone de Rédaction</span>
+                <span>{t('editor.writingArea')}</span>
               </button>
               <button
                 onClick={() => addComponent('matching')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-purple-50 text-purple-700"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-purple-50 dark:hover:bg-purple-900/20 text-purple-700 dark:text-purple-400"
               >
                 <Link2 className="w-4 h-4" />
-                <span>Correspondance</span>
+                <span>{t('editor.matching')}</span>
               </button>
               
-              <hr className="my-3 border-gray-300" />
-              <p className="text-xs font-semibold text-green-600 mb-2 px-2">📐 Sciences</p>
+              <hr className="my-3 border-gray-300 dark:border-slate-600" />
+              <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-2 px-2">📐 {t('editor.sciences')}</p>
               <button
                 onClick={() => addComponent('geometry')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-green-50 text-green-700"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-green-50 dark:hover:bg-green-900/20 text-green-700 dark:text-green-400"
               >
                 <Grid3X3 className="w-4 h-4" />
-                <span>Zone Géométrie</span>
+                <span>{t('editor.geometry')}</span>
               </button>
               
-              <hr className="my-3 border-gray-300" />
-              <p className="text-xs font-semibold text-amber-600 mb-2 px-2">📜 Histoire-Géo</p>
+              <hr className="my-3 border-gray-300 dark:border-slate-600" />
+              <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mb-2 px-2">📜 {t('editor.historyGeo')}</p>
               <button
                 onClick={() => addComponent('timeline')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-amber-50 text-amber-700"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-amber-50 dark:hover:bg-amber-900/20 text-amber-700 dark:text-amber-400"
               >
                 <Clock className="w-4 h-4" />
-                <span>Frise Chronologique</span>
+                <span>{t('editor.timeline')}</span>
               </button>
               
-              <hr className="my-3 border-gray-300" />
-              <p className="text-xs font-semibold text-gray-600 mb-2 px-2">Mise en Page</p>
+              <hr className="my-3 border-gray-300 dark:border-slate-600" />
+              <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 px-2">{t('editor.layout')}</p>
               <button
                 onClick={() => addComponent('pageBreak')}
-                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-orange-50 text-orange-700"
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 rtl:space-x-reverse hover:bg-orange-50 dark:hover:bg-orange-900/20 text-orange-700 dark:text-orange-400"
               >
                 <Scissors className="w-4 h-4" />
-                <span>Saut de Page</span>
+                <span>{t('editor.pageBreak')}</span>
               </button>
               
-              <hr className="my-3 border-gray-300" />
-              <p className="text-xs font-semibold text-purple-600 mb-2 px-2">✨ Intelligence Artificielle</p>
+              <hr className="my-3 border-gray-300 dark:border-slate-600" />
+              <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2 px-2">✨ {t('editor.aiSection')}</p>
               <AiMagicButton 
                 onQuestionsGenerated={handleAIQuestionsGenerated}
                 currentComponentCount={components.length}
@@ -702,10 +704,10 @@ export default function ExamBuilderPage() {
             {components.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg mb-4">
-                  Your exam is empty. Add components to get started.
+                  {t('editor.emptyExam')}
                 </p>
                 <p className="text-gray-400 text-sm">
-                  Click on the components in the left sidebar to add them to your exam.
+                  {t('editor.emptyExamHint')}
                 </p>
               </div>
             ) : (
