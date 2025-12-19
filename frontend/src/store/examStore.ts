@@ -1,21 +1,12 @@
 import { create } from 'zustand';
 import { Exam, ExamComponent, CreateExamDto, UpdateExamDto } from '../../../shared/src/types';
 import { toast } from 'react-toastify';
+import { supabase } from '../lib/supabase';
 
-// Local storage key
-const EXAMS_KEY = 'exam_builder_exams';
-
-// Helper functions
-const getStoredExams = (): Exam[] => {
-  const exams = localStorage.getItem(EXAMS_KEY);
-  return exams ? JSON.parse(exams) : [];
+const getUserId = (): number | null => {
+  const userId = localStorage.getItem('userId');
+  return userId ? parseInt(userId) : null;
 };
-
-const saveExams = (exams: Exam[]) => {
-  localStorage.setItem(EXAMS_KEY, JSON.stringify(exams));
-};
-
-const generateId = () => Math.random().toString(36).substr(2, 9);
 
 interface ExamState {
   exams: Exam[];
@@ -30,7 +21,7 @@ interface ExamState {
   updateComponents: (components: ExamComponent[]) => void;
 }
 
-export const useExamStore = create<ExamState>((set) => ({
+export const useExamStore = create<ExamState>((set, _get) => ({
   exams: [],
   currentExam: null,
   loading: false,
@@ -38,9 +29,32 @@ export const useExamStore = create<ExamState>((set) => ({
   fetchExams: async () => {
     try {
       set({ loading: true });
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const exams = getStoredExams();
+      const userId = getUserId();
+      
+      if (!userId) {
+        set({ exams: [], loading: false });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const exams: Exam[] = (data || []).map(exam => ({
+        id: exam.id.toString(),
+        userId: exam.user_id.toString(),
+        title: exam.title,
+        components: exam.components || [],
+        totalPoints: (exam.components || []).reduce((sum: number, comp: any) => 
+          sum + (comp.points || 0), 0),
+        createdAt: new Date(exam.created_at),
+        updatedAt: new Date(exam.updated_at),
+      }));
+
       set({ exams, loading: false });
     } catch (error: any) {
       set({ loading: false });
@@ -51,15 +65,27 @@ export const useExamStore = create<ExamState>((set) => ({
   fetchExam: async (id) => {
     try {
       set({ loading: true });
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const exams = getStoredExams();
-      const exam = exams.find(e => e.id === id);
-      if (exam) {
-        set({ currentExam: exam, loading: false });
-      } else {
-        set({ loading: false });
-        toast.error('Exam not found');
-      }
+      
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*')
+        .eq('id', parseInt(id))
+        .single();
+
+      if (error) throw error;
+
+      const exam: Exam = {
+        id: data.id.toString(),
+        userId: data.user_id.toString(),
+        title: data.title,
+        components: data.components || [],
+        totalPoints: (data.components || []).reduce((sum: number, comp: any) => 
+          sum + (comp.points || 0), 0),
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
+      };
+
+      set({ currentExam: exam, loading: false });
     } catch (error: any) {
       set({ loading: false });
       toast.error('Failed to fetch exam');
@@ -69,22 +95,33 @@ export const useExamStore = create<ExamState>((set) => ({
   createExam: async (data) => {
     try {
       set({ loading: true });
-      await new Promise(resolve => setTimeout(resolve, 300));
+      const userId = getUserId();
       
+      if (!userId) {
+        throw new Error('User not logged in');
+      }
+
+      const { data: newExam, error } = await supabase
+        .from('exams')
+        .insert({
+          user_id: userId,
+          title: data.title,
+          components: data.components || [],
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
       const exam: Exam = {
-        id: generateId(),
-        title: data.title,
-        components: data.components || [],
-        tags: data.tags,
+        id: newExam.id.toString(),
+        userId: newExam.user_id.toString(),
+        title: newExam.title,
+        components: newExam.components || [],
         totalPoints: 0,
-        userId: 'local_user',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date(newExam.created_at),
+        updatedAt: new Date(newExam.updated_at),
       };
-      
-      const exams = getStoredExams();
-      exams.unshift(exam);
-      saveExams(exams);
       
       set((state) => ({
         exams: [exam, ...state.exams],
@@ -103,27 +140,34 @@ export const useExamStore = create<ExamState>((set) => ({
   updateExam: async (id, data) => {
     try {
       set({ loading: true });
-      await new Promise(resolve => setTimeout(resolve, 300));
       
-      const exams = getStoredExams();
-      const examIndex = exams.findIndex(e => e.id === id);
-      
-      if (examIndex === -1) {
-        throw new Error('Exam not found');
-      }
-      
-      const updatedExam: Exam = {
-        ...exams[examIndex],
-        ...data,
-        updatedAt: new Date(),
+      const { data: updatedExam, error } = await supabase
+        .from('exams')
+        .update({
+          title: data.title,
+          components: data.components,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', parseInt(id))
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const exam: Exam = {
+        id: updatedExam.id.toString(),
+        userId: updatedExam.user_id.toString(),
+        title: updatedExam.title,
+        components: updatedExam.components || [],
+        totalPoints: (updatedExam.components || []).reduce((sum: number, comp: any) => 
+          sum + (comp.points || 0), 0),
+        createdAt: new Date(updatedExam.created_at),
+        updatedAt: new Date(updatedExam.updated_at),
       };
       
-      exams[examIndex] = updatedExam;
-      saveExams(exams);
-      
       set((state) => ({
-        exams: state.exams.map((e) => (e.id === id ? updatedExam : e)),
-        currentExam: state.currentExam?.id === id ? updatedExam : state.currentExam,
+        exams: state.exams.map((e) => (e.id === id ? exam : e)),
+        currentExam: state.currentExam?.id === id ? exam : state.currentExam,
         loading: false,
       }));
       toast.success('Exam updated successfully!');
@@ -137,11 +181,13 @@ export const useExamStore = create<ExamState>((set) => ({
   deleteExam: async (id) => {
     try {
       set({ loading: true });
-      await new Promise(resolve => setTimeout(resolve, 300));
       
-      const exams = getStoredExams();
-      const filteredExams = exams.filter(e => e.id !== id);
-      saveExams(filteredExams);
+      const { error } = await supabase
+        .from('exams')
+        .delete()
+        .eq('id', parseInt(id));
+
+      if (error) throw error;
       
       set((state) => ({
         exams: state.exams.filter((e) => e.id !== id),
@@ -173,13 +219,17 @@ export const useExamStore = create<ExamState>((set) => ({
         totalPoints,
       };
 
-      // Also save to localStorage
-      const exams = getStoredExams();
-      const examIndex = exams.findIndex(e => e.id === state.currentExam?.id);
-      if (examIndex !== -1) {
-        exams[examIndex] = updatedExam;
-        saveExams(exams);
-      }
+      // Save to Supabase in the background
+      supabase
+        .from('exams')
+        .update({
+          components,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', parseInt(state.currentExam.id))
+        .then(({ error }) => {
+          if (error) console.error('Failed to save components:', error);
+        });
 
       return {
         currentExam: updatedExam,

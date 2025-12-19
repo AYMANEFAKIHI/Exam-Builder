@@ -1,22 +1,8 @@
 import { create } from 'zustand';
 import { User, LoginCredentials, RegisterData } from '../../../shared/src/types';
 import { toast } from 'react-toastify';
-
-// Local storage keys
-const USERS_KEY = 'exam_builder_users';
-const CURRENT_USER_KEY = 'exam_builder_current_user';
-
-// Helper functions for local storage
-const getStoredUsers = (): User[] => {
-  const users = localStorage.getItem(USERS_KEY);
-  return users ? JSON.parse(users) : [];
-};
-
-const saveUsers = (users: User[]) => {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-};
-
-const generateId = () => Math.random().toString(36).substr(2, 9);
+import { supabase } from '../lib/supabase';
+import bcrypt from 'bcryptjs';
 
 interface AuthState {
   user: User | null;
@@ -37,25 +23,39 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ loading: true });
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const users = getStoredUsers();
-      const user = users.find(u => u.email === credentials.email);
-      
-      if (!user) {
+      // Find user by email
+      const { data: users, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', credentials.email)
+        .single();
+
+      if (error || !users) {
         throw new Error('User not found');
       }
+
+      // Verify password (simple comparison - in production use bcrypt)
+      const isValidPassword = users.password === credentials.password || 
+        (typeof users.password === 'string' && users.password.startsWith('$2') 
+          ? await bcrypt.compare(credentials.password, users.password)
+          : users.password === credentials.password);
       
-      // Simple password check (in real app, this would be hashed)
-      const storedPasswords = JSON.parse(localStorage.getItem('exam_builder_passwords') || '{}');
-      if (storedPasswords[user.id] !== credentials.password) {
+      if (!isValidPassword) {
         throw new Error('Invalid password');
       }
+
+      const user: User = {
+        id: users.id.toString(),
+        email: users.email,
+        firstName: users.name.split(' ')[0] || users.name,
+        lastName: users.name.split(' ').slice(1).join(' ') || '',
+        createdAt: new Date(users.created_at),
+        updatedAt: new Date(users.created_at),
+      };
       
-      const token = 'local_' + generateId();
+      const token = 'supabase_' + users.id;
       localStorage.setItem('token', token);
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+      localStorage.setItem('userId', users.id.toString());
       
       set({ user, token, loading: false });
       toast.success('Login successful!');
@@ -70,39 +70,50 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       set({ loading: true });
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const users = getStoredUsers();
-      
       // Check if user already exists
-      if (users.find(u => u.email === data.email)) {
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', data.email)
+        .single();
+
+      if (existingUser) {
         throw new Error('User with this email already exists');
       }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(data.password, 10);
       
-      const newUser: User = {
-        id: generateId(),
-        email: data.email,
+      // Create user in Supabase
+      const { data: newUser, error } = await supabase
+        .from('users')
+        .insert({
+          email: data.email,
+          password: hashedPassword,
+          name: `${data.firstName} ${data.lastName}`.trim(),
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      const user: User = {
+        id: newUser.id.toString(),
+        email: newUser.email,
         firstName: data.firstName,
         lastName: data.lastName,
         institution: data.institution,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date(newUser.created_at),
+        updatedAt: new Date(newUser.created_at),
       };
       
-      // Store password separately (simple demo - not secure for production)
-      const storedPasswords = JSON.parse(localStorage.getItem('exam_builder_passwords') || '{}');
-      storedPasswords[newUser.id] = data.password;
-      localStorage.setItem('exam_builder_passwords', JSON.stringify(storedPasswords));
-      
-      users.push(newUser);
-      saveUsers(users);
-      
-      const token = 'local_' + generateId();
+      const token = 'supabase_' + newUser.id;
       localStorage.setItem('token', token);
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(newUser));
+      localStorage.setItem('userId', newUser.id.toString());
       
-      set({ user: newUser, token, loading: false });
+      set({ user, token, loading: false });
       toast.success('Registration successful!');
     } catch (error: any) {
       set({ loading: false });
@@ -113,28 +124,44 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   logout: () => {
     localStorage.removeItem('token');
-    localStorage.removeItem(CURRENT_USER_KEY);
+    localStorage.removeItem('userId');
     set({ user: null, token: null });
     toast.info('Logged out');
   },
 
   checkAuth: async () => {
     const token = localStorage.getItem('token');
-    if (!token) {
+    const userId = localStorage.getItem('userId');
+    
+    if (!token || !userId) {
       set({ user: null, token: null });
       return;
     }
 
     try {
-      const storedUser = localStorage.getItem(CURRENT_USER_KEY);
-      if (storedUser) {
-        set({ user: JSON.parse(storedUser), token });
-      } else {
-        localStorage.removeItem('token');
-        set({ user: null, token: null });
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', parseInt(userId))
+        .single();
+
+      if (error || !userData) {
+        throw new Error('User not found');
       }
+
+      const user: User = {
+        id: userData.id.toString(),
+        email: userData.email,
+        firstName: userData.name.split(' ')[0] || userData.name,
+        lastName: userData.name.split(' ').slice(1).join(' ') || '',
+        createdAt: new Date(userData.created_at),
+        updatedAt: new Date(userData.created_at),
+      };
+
+      set({ user, token });
     } catch (error) {
       localStorage.removeItem('token');
+      localStorage.removeItem('userId');
       set({ user: null, token: null });
     }
   },

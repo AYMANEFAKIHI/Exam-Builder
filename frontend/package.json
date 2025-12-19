@@ -11,7 +11,9 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.89.0",
     "axios": "^1.6.2",
+    "bcryptjs": "^3.0.3",
     "date-fns": "^3.0.0",
     "html2canvas": "^1.4.1",
     "jspdf": "^2.5.1",
