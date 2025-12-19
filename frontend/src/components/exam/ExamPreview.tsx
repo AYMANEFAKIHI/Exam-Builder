@@ -1,12 +1,57 @@
 import { ExamComponent } from '../../../../shared/src/types';
 import LatexRenderer from './LatexRenderer';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { GripVertical } from 'lucide-react';
+import { useState } from 'react';
+
 
 interface ExamPreviewProps {
   title: string;
   components: ExamComponent[];
+  onOrderChange?: (components: ExamComponent[]) => void;
 }
 
-export default function ExamPreview({ components }: ExamPreviewProps) {
+// Sortable Item wrapper
+function SortableItem({ component, renderComponent }: { component: ExamComponent, renderComponent: (c: ExamComponent) => JSX.Element }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: component.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative',
+    background: isDragging ? '#f3f4f6' : undefined,
+  };
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} className="mb-2">
+      <div {...listeners} className="absolute -left-8 top-4 cursor-move text-gray-400 hover:text-gray-600">
+        <GripVertical className="w-6 h-6" />
+      </div>
+      {renderComponent(component)}
+    </div>
+  );
+}
+
+export default function ExamPreview({ components, onOrderChange }: ExamPreviewProps) {
+  const [items, setItems] = useState(components);
+
+  // Sync with parent if components change
+  React.useEffect(() => {
+    setItems(components);
+  }, [components]);
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+    if (active.id !== over?.id) {
+      const oldIndex = items.findIndex(i => i.id === active.id);
+      const newIndex = items.findIndex(i => i.id === over.id);
+      const newItems = arrayMove(items, oldIndex, newIndex);
+      setItems(newItems);
+      if (onOrderChange) onOrderChange(newItems);
+    }
+  };
+
   const renderComponent = (component: ExamComponent) => {
     switch (component.type) {
       case 'header':
@@ -253,13 +298,15 @@ export default function ExamPreview({ components }: ExamPreviewProps) {
 
   return (
     <div className="bg-white p-8 shadow-lg rounded-lg max-w-4xl mx-auto">
-      <div className="prose max-w-none">
-        {components.map((component) => (
-          <div key={component.id}>
-            {renderComponent(component)}
+      <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={items.map(i => i.id)} strategy={verticalListSortingStrategy}>
+          <div className="prose max-w-none relative">
+            {items.map((component) => (
+              <SortableItem key={component.id} component={component} renderComponent={renderComponent} />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
     </div>
   );
 }

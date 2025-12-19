@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useExamStore } from '../store/examStore';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import ExamPreview from '../components/exam/ExamPreview';
 import { ExamComponent, ComponentType } from '../../../shared/src/types';
 import { Save, Download, Plus, GripVertical, Scissors, Grid3X3, Clock, Link2 } from 'lucide-react';
 import HeaderComponentEditor from '../components/exam/HeaderComponentEditor';
@@ -711,40 +711,15 @@ export default function ExamBuilderPage() {
                 </p>
               </div>
             ) : (
-              <DragDropContext onDragEnd={onDragEnd}>
-                <Droppable droppableId="exam-components">
-                  {(provided, snapshot) => (
-                    <div
-                      {...provided.droppableProps}
-                      ref={provided.innerRef}
-                      className={`space-y-4 ${snapshot.isDraggingOver ? 'drop-zone-active' : ''}`}
-                    >
-                      {components.map((component, index) => (
-                        <Draggable key={component.id} draggableId={component.id} index={index}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              className={`relative ${snapshot.isDragging ? 'dragging' : ''}`}
-                            >
-                              <div
-                                {...provided.dragHandleProps}
-                                className="absolute -left-8 top-1/2 -translate-y-1/2 cursor-move text-gray-400 hover:text-gray-600"
-                              >
-                                <GripVertical className="w-6 h-6" />
-                              </div>
-                              {renderComponent(component, index)}
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </div>
-                  )}
-                </Droppable>
-              </DragDropContext>
+              <ExamPreview
+                title={title}
+                components={components}
+                onOrderChange={(newOrder) => {
+                  setComponents(newOrder);
+                  updateComponents(newOrder);
+                }}
+              />
             )}
-            
           </div>
         </div>
       </div>
