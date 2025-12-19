@@ -322,7 +322,7 @@ export default function ExamBuilderPage() {
     updateComponents(newComponents);
   };
 
-  // ...existing code...
+  // (fin des fonctions utilitaires, le code continue normalement)
           <ImageComponentEditor
             data={component}
             onChange={(data) => updateComponent(index, data)}
