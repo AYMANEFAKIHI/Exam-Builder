@@ -322,62 +322,7 @@ export default function ExamBuilderPage() {
     updateComponents(newComponents);
   };
 
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) return;
-
-    const items = Array.from(components);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
-
-    const updatedItems = items.map((item, index) => ({
-      ...item,
-      order: index,
-    }));
-
-    setComponents(updatedItems);
-    updateComponents(updatedItems);
-  };
-
-  const renderComponent = (component: ExamComponent, index: number) => {
-    switch (component.type) {
-      case 'header':
-        return (
-          <HeaderComponentEditor
-            data={component}
-            onChange={(data) => updateComponent(index, data)}
-            onDelete={() => deleteComponent(index)}
-            onDuplicate={() => duplicateComponent(index)}
-          />
-        );
-      case 'text':
-        return (
-          <TextComponentEditor
-            data={component}
-            onChange={(data) => updateComponent(index, data)}
-            onDelete={() => deleteComponent(index)}
-            onDuplicate={() => duplicateComponent(index)}
-          />
-        );
-      case 'table':
-        return (
-          <TableComponentEditor
-            data={component}
-            onChange={(data) => updateComponent(index, data)}
-            onDelete={() => deleteComponent(index)}
-            onDuplicate={() => duplicateComponent(index)}
-          />
-        );
-      case 'qcm':
-        return (
-          <QCMComponentEditor
-            data={component}
-            onChange={(data) => updateComponent(index, data)}
-            onDelete={() => deleteComponent(index)}
-            onDuplicate={() => duplicateComponent(index)}
-          />
-        );
-      case 'image':
-        return (
+  // ...existing code...
           <ImageComponentEditor
             data={component}
             onChange={(data) => updateComponent(index, data)}
