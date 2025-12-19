@@ -14,7 +14,6 @@ export default function Footer() {
           {/* Developer Credit */}
           <div className="flex items-center space-x-2 text-sm">
             <span>Développé avec</span>
-            <Heart className="w-4 h-4 text-red-500 fill-red-500 animate-pulse" />
             <span>par</span>
             <a
               href="https://www.linkedin.com/in/aymane-fakihi-9a3435335/"
