@@ -1,14 +1,13 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { Pool } from 'pg';
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.POSTGRES_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method not allowed' });
   }
@@ -54,4 +53,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Login error:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
-}
+};
