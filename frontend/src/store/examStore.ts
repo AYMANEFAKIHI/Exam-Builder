@@ -1,7 +1,21 @@
 import { create } from 'zustand';
 import { Exam, ExamComponent, CreateExamDto, UpdateExamDto } from '../../../shared/src/types';
-import api from '../lib/api';
 import { toast } from 'react-toastify';
+
+// Local storage key
+const EXAMS_KEY = 'exam_builder_exams';
+
+// Helper functions
+const getStoredExams = (): Exam[] => {
+  const exams = localStorage.getItem(EXAMS_KEY);
+  return exams ? JSON.parse(exams) : [];
+};
+
+const saveExams = (exams: Exam[]) => {
+  localStorage.setItem(EXAMS_KEY, JSON.stringify(exams));
+};
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
 
 interface ExamState {
   exams: Exam[];
@@ -24,8 +38,10 @@ export const useExamStore = create<ExamState>((set) => ({
   fetchExams: async () => {
     try {
       set({ loading: true });
-      const response = await api.get('/exams');
-      set({ exams: response.data.data, loading: false });
+      // Simulate network delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const exams = getStoredExams();
+      set({ exams, loading: false });
     } catch (error: any) {
       set({ loading: false });
       toast.error('Failed to fetch exams');
@@ -35,8 +51,15 @@ export const useExamStore = create<ExamState>((set) => ({
   fetchExam: async (id) => {
     try {
       set({ loading: true });
-      const response = await api.get(`/exams/${id}`);
-      set({ currentExam: response.data.data, loading: false });
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const exams = getStoredExams();
+      const exam = exams.find(e => e.id === id);
+      if (exam) {
+        set({ currentExam: exam, loading: false });
+      } else {
+        set({ loading: false });
+        toast.error('Exam not found');
+      }
     } catch (error: any) {
       set({ loading: false });
       toast.error('Failed to fetch exam');
@@ -46,8 +69,23 @@ export const useExamStore = create<ExamState>((set) => ({
   createExam: async (data) => {
     try {
       set({ loading: true });
-      const response = await api.post('/exams', data);
-      const exam = response.data.data;
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const exam: Exam = {
+        id: generateId(),
+        title: data.title,
+        components: data.components || [],
+        tags: data.tags,
+        totalPoints: 0,
+        userId: 'local_user',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      
+      const exams = getStoredExams();
+      exams.unshift(exam);
+      saveExams(exams);
+      
       set((state) => ({
         exams: [exam, ...state.exams],
         currentExam: exam,
@@ -65,8 +103,23 @@ export const useExamStore = create<ExamState>((set) => ({
   updateExam: async (id, data) => {
     try {
       set({ loading: true });
-      const response = await api.put(`/exams/${id}`, data);
-      const updatedExam = response.data.data;
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const exams = getStoredExams();
+      const examIndex = exams.findIndex(e => e.id === id);
+      
+      if (examIndex === -1) {
+        throw new Error('Exam not found');
+      }
+      
+      const updatedExam: Exam = {
+        ...exams[examIndex],
+        ...data,
+        updatedAt: new Date(),
+      };
+      
+      exams[examIndex] = updatedExam;
+      saveExams(exams);
       
       set((state) => ({
         exams: state.exams.map((e) => (e.id === id ? updatedExam : e)),
@@ -84,7 +137,12 @@ export const useExamStore = create<ExamState>((set) => ({
   deleteExam: async (id) => {
     try {
       set({ loading: true });
-      await api.delete(`/exams/${id}`);
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      const exams = getStoredExams();
+      const filteredExams = exams.filter(e => e.id !== id);
+      saveExams(filteredExams);
+      
       set((state) => ({
         exams: state.exams.filter((e) => e.id !== id),
         loading: false,
@@ -109,12 +167,22 @@ export const useExamStore = create<ExamState>((set) => ({
         return sum + (('points' in comp && comp.points) ? comp.points : 0);
       }, 0);
 
+      const updatedExam: Exam = {
+        ...state.currentExam,
+        components,
+        totalPoints,
+      };
+
+      // Also save to localStorage
+      const exams = getStoredExams();
+      const examIndex = exams.findIndex(e => e.id === state.currentExam?.id);
+      if (examIndex !== -1) {
+        exams[examIndex] = updatedExam;
+        saveExams(exams);
+      }
+
       return {
-        currentExam: {
-          ...state.currentExam,
-          components,
-          totalPoints,
-        },
+        currentExam: updatedExam,
       };
     });
   },
