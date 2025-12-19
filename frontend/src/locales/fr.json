@@ -1,0 +1,123 @@
+{
+  "translation": {
+    "nav": {
+      "features": "Fonctionnalités",
+      "tutorial": "Tutoriel",
+      "about": "À propos",
+      "login": "Connexion",
+      "register": "Commencer",
+      "dashboard": "Tableau de bord",
+      "myDocuments": "Mes Documents",
+      "createExam": "Créer un examen",
+      "logout": "Déconnexion"
+    },
+    "hero": {
+      "badge": "Propulsé par l'IA Gemini de Google",
+      "title": "L'Examen Parfait,",
+      "titleHighlight": "en quelques clics.",
+      "subtitle": "Gagnez des heures de préparation grâce à notre éditeur intelligent.",
+      "subtitleBold": "Conçu pour les professeurs exigeants",
+      "cta": "Commencer à créer",
+      "demo": "Voir la démo",
+      "free": "100% Gratuit",
+      "secure": "Données sécurisées",
+      "instant": "Export PDF instantané"
+    },
+    "features": {
+      "sectionTitle": "Fonctionnalités",
+      "title": "Pourquoi choisir ExamBuilder ?",
+      "subtitle": "Les outils dont vous avez toujours rêvé, enfin réunis en un seul endroit.",
+      "math": {
+        "title": "Mathématiques & Sciences",
+        "description": "Intégration native de LaTeX et grilles millimétrées pour des sujets de sciences impeccables.",
+        "feature1": "Rendu KaTeX professionnel",
+        "feature2": "4 types de grilles (mm, points, carrés, iso)"
+      },
+      "ai": {
+        "title": "Assistant IA Gratuit",
+        "description": "Générez des QCM et des exercices structurés instantanément grâce à l'intelligence artificielle de Google Gemini.",
+        "feature1": "Questions adaptées au niveau",
+        "feature2": "Vrai/Faux, QCM, Textes à trous"
+      },
+      "pdf": {
+        "title": "Format Standard PDF",
+        "description": "Exportez vos sujets au format A4 avec une mise en page académique fixe (Logo, En-tête, Zone Étudiant).",
+        "feature1": "Prêt à imprimer",
+        "feature2": "Grille de correction incluse"
+      },
+      "latex": "Support LaTeX",
+      "latexDesc": "Formules mathématiques avec rendu KaTeX professionnel",
+      "autoSave": "Sauvegarde auto",
+      "autoSaveDesc": "Vos examens sont sauvegardés automatiquement",
+      "questionBank": "Banque de questions",
+      "questionBankDesc": "Organisez et réutilisez vos questions",
+      "dragDrop": "Drag & Drop",
+      "dragDropDesc": "Interface intuitive par glisser-déposer"
+    },
+    "tutorial": {
+      "sectionTitle": "Tutoriel",
+      "title": "Créez votre premier examen en 3 étapes",
+      "subtitle": "Une interface pensée pour la simplicité et l'efficacité",
+      "step1Title": "Choisissez vos composants",
+      "step1Desc": "QCM, Vrai/Faux, Textes, Grilles... glissez-déposez dans votre examen",
+      "step2Title": "Personnalisez le contenu",
+      "step2Desc": "Utilisez l'IA pour générer des questions ou rédigez manuellement",
+      "step3Title": "Exportez en PDF",
+      "step3Desc": "Un clic et votre examen est prêt à imprimer au format A4",
+      "preview": "Éditeur d'examens avec aperçu A4 en temps réel",
+      "previewSubtitle": "Glissez-déposez vos composants pour construire l'examen parfait"
+    },
+    "about": {
+      "sectionTitle": "Derrière le projet",
+      "title": "Le Développeur",
+      "role": "Développeur Full-Stack & Passionné d'EdTech",
+      "description": "Je suis un développeur passionné par la création d'outils numériques qui simplifient le quotidien des professionnels. Avec ExamBuilder, mon objectif est de mettre la puissance de l'IA et du développement web moderne au service de l'éducation.",
+      "linkedin": "Me contacter sur LinkedIn",
+      "github": "Voir mes projets"
+    },
+    "cta": {
+      "title": "Prêt à gagner du temps ?",
+      "subtitle": "Rejoignez les enseignants qui ont déjà simplifié la création de leurs examens avec ExamBuilder",
+      "button": "Créer mon premier examen"
+    },
+    "footer": {
+      "developedBy": "Développé par",
+      "rights": "Tous droits réservés",
+      "education": "Simplifier la création d'examens pour les enseignants",
+      "pdfExport": "Export PDF professionnel",
+      "aiPowered": "Propulsé par l'IA"
+    },
+    "editor": {
+      "title": "Nouvel Examen",
+      "components": "Composants",
+      "preview": "Aperçu",
+      "export": "Exporter PDF",
+      "save": "Sauvegarder",
+      "header": "En-tête",
+      "text": "Texte",
+      "qcm": "QCM",
+      "trueFalse": "Vrai/Faux",
+      "fillBlanks": "Texte à trous",
+      "table": "Tableau",
+      "image": "Image",
+      "writingArea": "Zone d'écriture",
+      "exerciseHeader": "En-tête exercice",
+      "pageBreak": "Saut de page",
+      "geometry": "Grille géométrique",
+      "timeline": "Frise chronologique",
+      "matching": "Correspondance",
+      "aiGenerate": "Générer avec l'IA"
+    },
+    "common": {
+      "loading": "Chargement...",
+      "error": "Erreur",
+      "success": "Succès",
+      "cancel": "Annuler",
+      "confirm": "Confirmer",
+      "delete": "Supprimer",
+      "edit": "Modifier",
+      "add": "Ajouter",
+      "points": "points"
+    }
+  }
+}

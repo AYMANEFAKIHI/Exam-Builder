@@ -5,6 +5,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import 'katex/dist/katex.min.css';
 import './index.css';
+import './i18n'; // Import i18n configuration
 import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -21,6 +22,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         pauseOnFocusLoss
         draggable
         pauseOnHover
+        theme="colored"
       />
     </BrowserRouter>
   </React.StrictMode>

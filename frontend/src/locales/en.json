@@ -1,0 +1,123 @@
+{
+  "translation": {
+    "nav": {
+      "features": "Features",
+      "tutorial": "Tutorial",
+      "about": "About",
+      "login": "Login",
+      "register": "Get Started",
+      "dashboard": "Dashboard",
+      "myDocuments": "My Documents",
+      "createExam": "Create Exam",
+      "logout": "Logout"
+    },
+    "hero": {
+      "badge": "Powered by Google Gemini AI",
+      "title": "The Perfect Exam,",
+      "titleHighlight": "in just a few clicks.",
+      "subtitle": "Save hours of preparation with our intelligent editor.",
+      "subtitleBold": "Built for demanding teachers",
+      "cta": "Start Creating",
+      "demo": "Watch Demo",
+      "free": "100% Free",
+      "secure": "Secure Data",
+      "instant": "Instant PDF Export"
+    },
+    "features": {
+      "sectionTitle": "Features",
+      "title": "Why Choose ExamBuilder?",
+      "subtitle": "The tools you've always dreamed of, finally in one place.",
+      "math": {
+        "title": "Mathematics & Science",
+        "description": "Native LaTeX integration and millimeter grids for impeccable science subjects.",
+        "feature1": "Professional KaTeX rendering",
+        "feature2": "4 grid types (mm, dots, squares, iso)"
+      },
+      "ai": {
+        "title": "Free AI Assistant",
+        "description": "Generate MCQs and structured exercises instantly with Google Gemini artificial intelligence.",
+        "feature1": "Level-adapted questions",
+        "feature2": "True/False, MCQ, Fill-in-the-blanks"
+      },
+      "pdf": {
+        "title": "Standard PDF Format",
+        "description": "Export your exams in A4 format with fixed academic layout (Logo, Header, Student Area).",
+        "feature1": "Print-ready",
+        "feature2": "Correction grid included"
+      },
+      "latex": "LaTeX Support",
+      "latexDesc": "Mathematical formulas with professional KaTeX rendering",
+      "autoSave": "Auto-save",
+      "autoSaveDesc": "Your exams are saved automatically",
+      "questionBank": "Question Bank",
+      "questionBankDesc": "Organize and reuse your questions",
+      "dragDrop": "Drag & Drop",
+      "dragDropDesc": "Intuitive drag-and-drop interface"
+    },
+    "tutorial": {
+      "sectionTitle": "Tutorial",
+      "title": "Create your first exam in 3 steps",
+      "subtitle": "An interface designed for simplicity and efficiency",
+      "step1Title": "Choose your components",
+      "step1Desc": "MCQ, True/False, Texts, Grids... drag and drop into your exam",
+      "step2Title": "Customize the content",
+      "step2Desc": "Use AI to generate questions or write manually",
+      "step3Title": "Export to PDF",
+      "step3Desc": "One click and your exam is ready to print in A4 format",
+      "preview": "Exam editor with real-time A4 preview",
+      "previewSubtitle": "Drag and drop your components to build the perfect exam"
+    },
+    "about": {
+      "sectionTitle": "Behind the Project",
+      "title": "The Developer",
+      "role": "Full-Stack Developer & EdTech Enthusiast",
+      "description": "I am a developer passionate about creating digital tools that simplify the daily lives of professionals. With ExamBuilder, my goal is to put the power of AI and modern web development at the service of education.",
+      "linkedin": "Contact me on LinkedIn",
+      "github": "View my projects"
+    },
+    "cta": {
+      "title": "Ready to save time?",
+      "subtitle": "Join the teachers who have already simplified creating their exams with ExamBuilder",
+      "button": "Create my first exam"
+    },
+    "footer": {
+      "developedBy": "Developed by",
+      "rights": "All rights reserved",
+      "education": "Simplifying exam creation for teachers",
+      "pdfExport": "Professional PDF export",
+      "aiPowered": "Powered by AI"
+    },
+    "editor": {
+      "title": "New Exam",
+      "components": "Components",
+      "preview": "Preview",
+      "export": "Export PDF",
+      "save": "Save",
+      "header": "Header",
+      "text": "Text",
+      "qcm": "MCQ",
+      "trueFalse": "True/False",
+      "fillBlanks": "Fill in the blanks",
+      "table": "Table",
+      "image": "Image",
+      "writingArea": "Writing Area",
+      "exerciseHeader": "Exercise Header",
+      "pageBreak": "Page Break",
+      "geometry": "Geometry Grid",
+      "timeline": "Timeline",
+      "matching": "Matching",
+      "aiGenerate": "Generate with AI"
+    },
+    "common": {
+      "loading": "Loading...",
+      "error": "Error",
+      "success": "Success",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "delete": "Delete",
+      "edit": "Edit",
+      "add": "Add",
+      "points": "points"
+    }
+  }
+}
