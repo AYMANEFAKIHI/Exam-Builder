@@ -1,7 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "installCommand": "npm install && cd api && npm install",
+  "installCommand": "npm install && npm install --prefix api",
   "framework": null,
   "functions": {
     "api/**/*.js": {
