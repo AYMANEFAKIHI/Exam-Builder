@@ -13,13 +13,24 @@
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:frontend && npm run build:backend",
+    "build": "cd frontend && npm install && npm run build",
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build",
     "start": "cd backend && npm start"
   },
+  "dependencies": {
+    "@vercel/node": "^3.0.12",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.11.3"
+  },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/node": "^20.10.6",
+    "@types/pg": "^8.10.9",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.3.3"
   },
   "engines": {
     "node": ">=18.0.0",
