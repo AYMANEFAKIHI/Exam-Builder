@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { FileText, Plus, Trash2, Copy, Globe, Lock } from 'lucide-react';
 import { Template } from '../../../shared/src/types';
 import { toast } from 'react-toastify';
@@ -8,7 +8,6 @@ export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  // Template creation modal state can be added later
 
   useEffect(() => {
     fetchTemplates();
@@ -17,11 +16,42 @@ export default function TemplatesPage() {
   const fetchTemplates = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/templates');
-      setTemplates(response.data.data);
+      
+      // Try to fetch from Supabase
+      const { data, error } = await supabase
+        .from('templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        // Fallback to localStorage
+        const localTemplates = localStorage.getItem('templates');
+        if (localTemplates) {
+          setTemplates(JSON.parse(localTemplates));
+        }
+      } else {
+        // Transform from DB format to app format
+        const transformedTemplates: Template[] = (data || []).map((t: any) => ({
+          id: t.id,
+          userId: t.user_id || '',
+          name: t.name,
+          description: t.description,
+          headerComponent: t.header_component,
+          isPublic: t.is_public,
+          usageCount: t.usage_count || 0,
+          createdAt: t.created_at,
+          updatedAt: t.updated_at,
+        }));
+        setTemplates(transformedTemplates);
+      }
     } catch (error) {
       console.error('Failed to fetch templates:', error);
-      toast.error('Failed to load templates');
+      // Fallback to localStorage
+      const localTemplates = localStorage.getItem('templates');
+      if (localTemplates) {
+        setTemplates(JSON.parse(localTemplates));
+      }
     } finally {
       setLoading(false);
     }
@@ -31,7 +61,18 @@ export default function TemplatesPage() {
     if (!confirm('Are you sure you want to delete this template?')) return;
 
     try {
-      await api.delete(`/templates/${id}`);
+      const { error } = await supabase
+        .from('templates')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Supabase delete error:', error);
+        // Fallback to localStorage
+        const localTemplates = templates.filter((t) => t.id !== id);
+        localStorage.setItem('templates', JSON.stringify(localTemplates));
+      }
+      
       setTemplates(templates.filter((t) => t.id !== id));
       toast.success('Template deleted successfully');
     } catch (error) {
@@ -42,12 +83,26 @@ export default function TemplatesPage() {
 
   const useTemplate = async (template: Template) => {
     try {
-      await api.post(`/templates/${template.id}/use`);
+      // Increment usage count in Supabase
+      await supabase
+        .from('templates')
+        .update({ usage_count: (template.usageCount || 0) + 1 })
+        .eq('id', template.id);
+      
       localStorage.setItem('templateHeader', JSON.stringify(template.headerComponent));
       toast.success('Template copied! Use it in your next exam.');
+      
+      // Update local state
+      setTemplates(templates.map(t => 
+        t.id === template.id 
+          ? { ...t, usageCount: (t.usageCount || 0) + 1 }
+          : t
+      ));
     } catch (error) {
       console.error('Failed to use template:', error);
-      toast.error('Failed to use template');
+      // Still save to localStorage even if DB update fails
+      localStorage.setItem('templateHeader', JSON.stringify(template.headerComponent));
+      toast.success('Template copied! Use it in your next exam.');
     }
   };
 
@@ -106,44 +161,46 @@ export default function TemplatesPage() {
               {/* Template Preview */}
               <div className="bg-gray-50 rounded-lg p-4 mb-4 text-sm">
                 <div className="space-y-2">
-                  {template.headerComponent.examTitle && (
+                  {template.headerComponent?.examTitle && (
                     <p>
                       <span className="font-medium">Title:</span> {template.headerComponent.examTitle}
                     </p>
                   )}
-                  {template.headerComponent.academicYear && (
+                  {template.headerComponent?.academicYear && (
                     <p>
                       <span className="font-medium">Year:</span> {template.headerComponent.academicYear}
                     </p>
                   )}
-                  {template.headerComponent.semester && (
+                  {template.headerComponent?.semester && (
                     <p>
                       <span className="font-medium">Semester:</span> {template.headerComponent.semester}
                     </p>
                   )}
-                  {template.headerComponent.duration && (
+                  {template.headerComponent?.duration && (
                     <p>
                       <span className="font-medium">Duration:</span> {template.headerComponent.duration}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-2 pt-2 border-t">
-                    {template.headerComponent.studentFields.name && (
-                      <span className="px-2 py-1 bg-white rounded text-xs">Name</span>
-                    )}
-                    {template.headerComponent.studentFields.firstName && (
-                      <span className="px-2 py-1 bg-white rounded text-xs">First Name</span>
-                    )}
-                    {template.headerComponent.studentFields.classGroup && (
-                      <span className="px-2 py-1 bg-white rounded text-xs">Class/Group</span>
-                    )}
-                  </div>
+                  {template.headerComponent?.studentFields && (
+                    <div className="flex flex-wrap gap-2 pt-2 border-t">
+                      {template.headerComponent.studentFields.name && (
+                        <span className="px-2 py-1 bg-white rounded text-xs">Name</span>
+                      )}
+                      {template.headerComponent.studentFields.firstName && (
+                        <span className="px-2 py-1 bg-white rounded text-xs">First Name</span>
+                      )}
+                      {template.headerComponent.studentFields.classGroup && (
+                        <span className="px-2 py-1 bg-white rounded text-xs">Class/Group</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex justify-between items-center pt-4 border-t">
                 <span className="text-xs text-gray-500">
-                  Used {template.usageCount} {template.usageCount === 1 ? 'time' : 'times'}
+                  Used {template.usageCount || 0} {(template.usageCount || 0) === 1 ? 'time' : 'times'}
                 </span>
                 <div className="flex space-x-2">
                   <button

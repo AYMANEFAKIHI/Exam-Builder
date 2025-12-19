@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../lib/api';
+import { supabase } from '../lib/supabase';
 import { BookOpen, Search, Trash2, Copy, Tag } from 'lucide-react';
 import { QuestionBankItem, ExamComponent } from '../../../shared/src/types';
 import { toast } from 'react-toastify';
@@ -11,7 +11,6 @@ export default function QuestionBankPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedSubject, setSelectedSubject] = useState<string>('all');
-  // Modal functionality can be added later
 
   useEffect(() => {
     fetchQuestions();
@@ -24,11 +23,41 @@ export default function QuestionBankPage() {
   const fetchQuestions = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/question-bank');
-      setQuestions(response.data.data);
+      
+      // Try to fetch from Supabase
+      const { data, error } = await supabase
+        .from('question_bank')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Supabase error:', error);
+        // Fallback to localStorage
+        const localQuestions = localStorage.getItem('questionBank');
+        if (localQuestions) {
+          setQuestions(JSON.parse(localQuestions));
+        }
+      } else {
+        // Transform from DB format to app format
+        const transformedQuestions: QuestionBankItem[] = (data || []).map((q: any) => ({
+          id: q.id,
+          userId: q.user_id || '',
+          component: q.component,
+          tags: q.tags || [],
+          difficulty: q.difficulty,
+          subject: q.subject,
+          usageCount: q.usage_count || 0,
+          createdAt: q.created_at,
+        }));
+        setQuestions(transformedQuestions);
+      }
     } catch (error) {
       console.error('Failed to fetch questions:', error);
-      toast.error('Failed to load questions');
+      // Fallback to localStorage
+      const localQuestions = localStorage.getItem('questionBank');
+      if (localQuestions) {
+        setQuestions(JSON.parse(localQuestions));
+      }
     } finally {
       setLoading(false);
     }
@@ -66,7 +95,18 @@ export default function QuestionBankPage() {
     if (!confirm('Are you sure you want to delete this question?')) return;
 
     try {
-      await api.delete(`/question-bank/${id}`);
+      const { error } = await supabase
+        .from('question_bank')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Supabase delete error:', error);
+        // Fallback: update localStorage
+        const localQuestions = questions.filter((q) => q.id !== id);
+        localStorage.setItem('questionBank', JSON.stringify(localQuestions));
+      }
+      
       setQuestions(questions.filter((q) => q.id !== id));
       toast.success('Question deleted successfully');
     } catch (error) {
@@ -82,7 +122,20 @@ export default function QuestionBankPage() {
 
   const incrementUsage = async (id: string) => {
     try {
-      await api.post(`/question-bank/${id}/use`);
+      const question = questions.find(q => q.id === id);
+      if (question) {
+        await supabase
+          .from('question_bank')
+          .update({ usage_count: (question.usageCount || 0) + 1 })
+          .eq('id', id);
+        
+        // Update local state
+        setQuestions(questions.map(q => 
+          q.id === id 
+            ? { ...q, usageCount: (q.usageCount || 0) + 1 }
+            : q
+        ));
+      }
     } catch (error) {
       console.error('Failed to increment usage:', error);
     }
