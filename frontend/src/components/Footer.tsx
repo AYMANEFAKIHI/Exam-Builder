@@ -1,4 +1,4 @@
-import { Linkedin, Heart, GraduationCap } from 'lucide-react';
+import { Linkedin, GraduationCap } from 'lucide-react';
 
 export default function Footer() {
   return (
