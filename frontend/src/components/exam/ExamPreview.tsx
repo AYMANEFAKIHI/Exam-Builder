@@ -1,6 +1,6 @@
 import { ExamComponent } from '../../../../shared/src/types';
 import LatexRenderer from './LatexRenderer';
-import React, { useState } from 'react';
+import React, { useState, ReactElement } from 'react';
 import { DndContext, closestCenter } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -15,7 +15,7 @@ interface ExamPreviewProps {
 
 // Sortable Item wrapper
 import type { CSSProperties } from 'react';
-function SortableItem({ component, renderComponent }: { component: ExamComponent, renderComponent: (c: ExamComponent) => JSX.Element }) {
+function SortableItem({ component, renderComponent }: { component: ExamComponent, renderComponent: (c: ExamComponent) => ReactElement }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: component.id });
   const style: CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -53,7 +53,7 @@ export default function ExamPreview({ components, onOrderChange }: ExamPreviewPr
     }
   };
 
-  const renderComponent = (component: ExamComponent) => {
+  const renderComponent = (component: ExamComponent): ReactElement => {
     switch (component.type) {
       case 'header':
         return (
@@ -296,7 +296,7 @@ export default function ExamPreview({ components, onOrderChange }: ExamPreviewPr
         return null;
     }
     // Always return a valid element (never null)
-    return <span />;
+    return <div />;
   };
 
   return (
