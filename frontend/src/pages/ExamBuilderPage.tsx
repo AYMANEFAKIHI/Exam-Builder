@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useExamStore } from '../store/examStore';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ExamComponent, ComponentType } from '../../../shared/src/types';
-import { Save, Download, Plus, GripVertical, Scissors, Sparkles, X, Loader2 } from 'lucide-react';
+import { Save, Download, Plus, GripVertical, Scissors } from 'lucide-react';
 import HeaderComponentEditor from '../components/exam/HeaderComponentEditor';
 import TextComponentEditor from '../components/exam/TextComponentEditor';
 import TableComponentEditor from '../components/exam/TableComponentEditor';
@@ -15,6 +15,7 @@ import WritingAreaComponentEditor from '../components/exam/WritingAreaComponentE
 import ExerciseHeaderComponentEditor from '../components/exam/ExerciseHeaderComponentEditor';
 import PageBreakComponentEditor from '../components/exam/PageBreakComponentEditor';
 import ExamSummary from '../components/exam/ExamSummary';
+import AiMagicButton from '../components/AiMagicButton';
 import { generatePDF } from '../utils/pdfGenerator';
 import { toast } from 'react-toastify';
 
@@ -36,12 +37,12 @@ export default function ExamBuilderPage() {
   
   // Auto-save indicator
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  
-  // AI Generator state
-  const [showAIModal, setShowAIModal] = useState(false);
-  const [aiSubject, setAiSubject] = useState('');
-  const [aiCount, setAiCount] = useState(5);
-  const [aiLoading, setAiLoading] = useState(false);
+
+  // Handler for AI-generated questions
+  const handleAIQuestionsGenerated = (newComponents: ExamComponent[]) => {
+    setComponents([...components, ...newComponents]);
+    updateComponents([...components, ...newComponents]);
+  };
 
   // Auto-save to localStorage
   const autoSave = useCallback(() => {
@@ -136,61 +137,6 @@ export default function ExamBuilderPage() {
       return;
     }
     await generatePDF(title, components, { hidePoints, watermark, autoNumbering });
-  };
-
-  // AI Question Generator
-  const handleGenerateWithAI = async () => {
-    if (!aiSubject.trim()) {
-      toast.error('Veuillez entrer un sujet');
-      return;
-    }
-
-    setAiLoading(true);
-    try {
-      const response = await fetch('/api/generate-questions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: aiSubject, count: aiCount, language: 'fr' }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.details || error.error || 'Erreur lors de la génération');
-      }
-
-      const data = await response.json();
-      
-      if (data.questions && Array.isArray(data.questions)) {
-        // Convert AI questions to QCM components
-        const newComponents: ExamComponent[] = data.questions.map((q: any, index: number) => ({
-          id: `qcm-ai-${Date.now()}-${index}`,
-          type: 'qcm' as const,
-          order: components.length + index,
-          question: q.question,
-          options: q.options.map((opt: string, i: number) => ({
-            id: `opt-${Date.now()}-${index}-${i}`,
-            text: opt,
-            isCorrect: q.correctAnswer === String.fromCharCode(65 + i),
-            latex: false,
-          })),
-          multipleAnswers: false,
-          points: q.points || 2,
-          latex: false,
-          columns: 1,
-        }));
-
-        setComponents([...components, ...newComponents]);
-        updateComponents([...components, ...newComponents]);
-        toast.success(`${newComponents.length} questions générées avec succès !`);
-        setShowAIModal(false);
-        setAiSubject('');
-      }
-    } catch (error) {
-      console.error('AI generation error:', error);
-      toast.error(error instanceof Error ? error.message : 'Erreur lors de la génération');
-    } finally {
-      setAiLoading(false);
-    }
   };
 
   const addComponent = (type: ComponentType) => {
@@ -643,13 +589,10 @@ export default function ExamBuilderPage() {
               
               <hr className="my-3 border-gray-300" />
               <p className="text-xs font-semibold text-purple-600 mb-2 px-2">✨ Intelligence Artificielle</p>
-              <button
-                onClick={() => setShowAIModal(true)}
-                className="w-full btn text-left flex items-center space-x-2 bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 shadow-md"
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Générer avec l'IA</span>
-              </button>
+              <AiMagicButton 
+                onQuestionsGenerated={handleAIQuestionsGenerated}
+                currentComponentCount={components.length}
+              />
             </div>
           </div>
         </div>
@@ -707,90 +650,6 @@ export default function ExamBuilderPage() {
       
       {/* Floating Exam Summary */}
       <ExamSummary components={components} />
-      
-      {/* AI Generator Modal */}
-      {showAIModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden">
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-4 flex justify-between items-center">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Sparkles className="w-5 h-5" />
-                Générateur de Questions IA
-              </h3>
-              <button
-                onClick={() => setShowAIModal(false)}
-                className="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Sujet ou Thème
-                </label>
-                <textarea
-                  value={aiSubject}
-                  onChange={(e) => setAiSubject(e.target.value)}
-                  placeholder="Ex: Les équations du second degré, La Révolution française, Les cellules animales..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nombre de questions
-                </label>
-                <select
-                  value={aiCount}
-                  onChange={(e) => setAiCount(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                >
-                  <option value={3}>3 questions</option>
-                  <option value={5}>5 questions</option>
-                  <option value={10}>10 questions</option>
-                </select>
-              </div>
-              
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                <p className="text-xs text-purple-700">
-                  💡 <strong>Conseil :</strong> Soyez précis dans votre sujet pour obtenir des questions plus pertinentes. 
-                  Exemple : "Les fonctions dérivées niveau Terminale S" plutôt que juste "Mathématiques".
-                </p>
-              </div>
-              
-              <div className="flex space-x-3 pt-2">
-                <button
-                  onClick={handleGenerateWithAI}
-                  disabled={aiLoading || !aiSubject.trim()}
-                  className="flex-1 btn bg-gradient-to-r from-purple-500 to-indigo-500 text-white hover:from-purple-600 hover:to-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                >
-                  {aiLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Génération en cours...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4" />
-                      Générer
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => setShowAIModal(false)}
-                  className="btn btn-secondary"
-                  disabled={aiLoading}
-                >
-                  Annuler
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
