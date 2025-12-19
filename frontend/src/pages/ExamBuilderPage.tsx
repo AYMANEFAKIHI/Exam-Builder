@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useExamStore } from '../store/examStore';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { ExamComponent, ComponentType } from '../../../shared/src/types';
-import { Save, Download, Plus, GripVertical, Scissors } from 'lucide-react';
+import { Save, Download, Plus, GripVertical, Scissors, Grid3X3, Clock, Link2 } from 'lucide-react';
 import HeaderComponentEditor from '../components/exam/HeaderComponentEditor';
 import TextComponentEditor from '../components/exam/TextComponentEditor';
 import TableComponentEditor from '../components/exam/TableComponentEditor';
@@ -14,6 +14,9 @@ import FillInBlanksComponentEditor from '../components/exam/FillInBlanksComponen
 import WritingAreaComponentEditor from '../components/exam/WritingAreaComponentEditor';
 import ExerciseHeaderComponentEditor from '../components/exam/ExerciseHeaderComponentEditor';
 import PageBreakComponentEditor from '../components/exam/PageBreakComponentEditor';
+import GeometryComponentEditor from '../components/exam/GeometryComponentEditor';
+import TimelineComponentEditor from '../components/exam/TimelineComponentEditor';
+import MatchingComponentEditor from '../components/exam/MatchingComponentEditor';
 import ExamSummary from '../components/exam/ExamSummary';
 import AiMagicButton from '../components/AiMagicButton';
 import { generatePDF } from '../utils/pdfGenerator';
@@ -245,6 +248,48 @@ export default function ExamBuilderPage() {
           ...baseComponent,
           type: 'pageBreak',
         };
+      case 'geometry':
+        return {
+          ...baseComponent,
+          type: 'geometry',
+          gridType: 'millimeter',
+          width: 150,
+          height: 100,
+          instructions: '',
+          points: 0,
+        };
+      case 'timeline':
+        return {
+          ...baseComponent,
+          type: 'timeline',
+          title: '',
+          startYear: 1789,
+          endYear: 1815,
+          events: [
+            { id: 'event-1', date: '1789', label: '', showDate: true, showLabel: false },
+            { id: 'event-2', date: '1799', label: '', showDate: false, showLabel: true },
+          ],
+          points: 0,
+        };
+      case 'matching':
+        return {
+          ...baseComponent,
+          type: 'matching',
+          title: '',
+          instructions: 'Reliez les éléments de gauche à ceux de droite',
+          leftColumn: [
+            { id: 'left-1', text: '' },
+            { id: 'left-2', text: '' },
+            { id: 'left-3', text: '' },
+          ],
+          rightColumn: [
+            { id: 'right-1', text: '' },
+            { id: 'right-2', text: '' },
+            { id: 'right-3', text: '' },
+          ],
+          shuffleRight: true,
+          points: 0,
+        };
       default:
         throw new Error(`Unknown component type: ${type}`);
     }
@@ -377,6 +422,33 @@ export default function ExamBuilderPage() {
       case 'pageBreak':
         return (
           <PageBreakComponentEditor
+            data={component}
+            onChange={(data) => updateComponent(index, data)}
+            onDelete={() => deleteComponent(index)}
+            onDuplicate={() => duplicateComponent(index)}
+          />
+        );
+      case 'geometry':
+        return (
+          <GeometryComponentEditor
+            data={component}
+            onChange={(data) => updateComponent(index, data)}
+            onDelete={() => deleteComponent(index)}
+            onDuplicate={() => duplicateComponent(index)}
+          />
+        );
+      case 'timeline':
+        return (
+          <TimelineComponentEditor
+            data={component}
+            onChange={(data) => updateComponent(index, data)}
+            onDelete={() => deleteComponent(index)}
+            onDuplicate={() => duplicateComponent(index)}
+          />
+        );
+      case 'matching':
+        return (
+          <MatchingComponentEditor
             data={component}
             onChange={(data) => updateComponent(index, data)}
             onDelete={() => deleteComponent(index)}
@@ -575,6 +647,33 @@ export default function ExamBuilderPage() {
               >
                 <Plus className="w-4 h-4" />
                 <span>Zone de Rédaction</span>
+              </button>
+              <button
+                onClick={() => addComponent('matching')}
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-purple-50 text-purple-700"
+              >
+                <Link2 className="w-4 h-4" />
+                <span>Correspondance</span>
+              </button>
+              
+              <hr className="my-3 border-gray-300" />
+              <p className="text-xs font-semibold text-green-600 mb-2 px-2">📐 Sciences</p>
+              <button
+                onClick={() => addComponent('geometry')}
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-green-50 text-green-700"
+              >
+                <Grid3X3 className="w-4 h-4" />
+                <span>Zone Géométrie</span>
+              </button>
+              
+              <hr className="my-3 border-gray-300" />
+              <p className="text-xs font-semibold text-amber-600 mb-2 px-2">📜 Histoire-Géo</p>
+              <button
+                onClick={() => addComponent('timeline')}
+                className="w-full btn btn-secondary text-left flex items-center space-x-2 hover:bg-amber-50 text-amber-700"
+              >
+                <Clock className="w-4 h-4" />
+                <span>Frise Chronologique</span>
               </button>
               
               <hr className="my-3 border-gray-300" />

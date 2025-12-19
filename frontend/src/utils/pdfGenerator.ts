@@ -398,6 +398,126 @@ const renderComponentsToHTML = async (
           </div>
         `;
         break;
+
+      case 'geometry':
+        const gWidth = component.width || 100;
+        const gHeight = component.height || 100;
+        const gridType = component.gridType || 'millimeter';
+        
+        let gridPattern = '';
+        if (gridType === 'millimeter') {
+          gridPattern = `
+            <defs>
+              <pattern id="smallGrid" width="3.78" height="3.78" patternUnits="userSpaceOnUse">
+                <path d="M 3.78 0 L 0 0 0 3.78" fill="none" stroke="#ccc" stroke-width="0.3"/>
+              </pattern>
+              <pattern id="grid" width="37.8" height="37.8" patternUnits="userSpaceOnUse">
+                <rect width="37.8" height="37.8" fill="url(#smallGrid)"/>
+                <path d="M 37.8 0 L 0 0 0 37.8" fill="none" stroke="#999" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
+          `;
+        } else if (gridType === 'dots') {
+          gridPattern = `
+            <defs>
+              <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
+                <circle cx="5" cy="5" r="0.8" fill="#666"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots)"/>
+          `;
+        } else if (gridType === 'squares') {
+          gridPattern = `
+            <defs>
+              <pattern id="squares" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ccc" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#squares)"/>
+          `;
+        } else if (gridType === 'isometric') {
+          gridPattern = `
+            <defs>
+              <pattern id="iso" width="28" height="48" patternUnits="userSpaceOnUse">
+                <path d="M14 0 L0 24 L14 48 L28 24 Z" fill="none" stroke="#ccc" stroke-width="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#iso)"/>
+          `;
+        }
+        
+        html += `
+          <div style="text-align: center;">
+            <svg width="${gWidth * 3.78}" height="${gHeight * 3.78}" style="border: 1px solid #333; background: white;">
+              ${gridPattern}
+            </svg>
+          </div>
+        `;
+        break;
+
+      case 'timeline':
+        const events = component.events || [];
+        const timelineWidth = 600;
+        const eventSpacing = events.length > 1 ? timelineWidth / (events.length + 1) : timelineWidth / 2;
+        
+        html += `
+          <div style="margin: 20px 0;">
+            <svg width="100%" height="150" viewBox="0 0 ${timelineWidth + 40} 150">
+              <!-- Main timeline line -->
+              <line x1="20" y1="75" x2="${timelineWidth + 20}" y2="75" stroke="#4f46e5" stroke-width="3"/>
+              <!-- Arrow at end -->
+              <polygon points="${timelineWidth + 20},75 ${timelineWidth + 10},70 ${timelineWidth + 10},80" fill="#4f46e5"/>
+              
+              ${events.map((event, idx) => {
+                const x = 20 + (idx + 1) * eventSpacing;
+                const isTop = idx % 2 === 0;
+                const y = isTop ? 30 : 120;
+                const lineY1 = isTop ? 50 : 100;
+                return `
+                  <line x1="${x}" y1="75" x2="${x}" y2="${lineY1}" stroke="#4f46e5" stroke-width="2"/>
+                  <circle cx="${x}" cy="75" r="6" fill="#4f46e5"/>
+                  <text x="${x}" y="${y}" text-anchor="middle" font-size="12" fill="#333">
+                    ${event.showDate ? event.date : '________'}
+                  </text>
+                  <text x="${x}" y="${y + 15}" text-anchor="middle" font-size="10" fill="#666">
+                    ${event.showLabel ? event.label : '________'}
+                  </text>
+                `;
+              }).join('')}
+            </svg>
+          </div>
+        `;
+        break;
+
+      case 'matching':
+        const leftItems = component.leftColumn || [];
+        const rightItems = component.rightColumn || [];
+        const shuffledRight = component.shuffleRight ? [...rightItems].sort(() => Math.random() - 0.5) : rightItems;
+        
+        html += `
+          <div style="margin: 20px 0;">
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr>
+                  <th style="width: 45%; padding: 10px; border: 1px solid #333; background: #f3f4f6;">Colonne A</th>
+                  <th style="width: 10%; padding: 10px; border: 1px solid #333; background: #f3f4f6;">Réponse</th>
+                  <th style="width: 45%; padding: 10px; border: 1px solid #333; background: #f3f4f6;">Colonne B</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${leftItems.map((item, idx) => `
+                  <tr>
+                    <td style="padding: 10px; border: 1px solid #333;"><strong>${idx + 1}.</strong> ${item}</td>
+                    <td style="padding: 10px; border: 1px solid #333; text-align: center;">____</td>
+                    <td style="padding: 10px; border: 1px solid #333;"><strong>${String.fromCharCode(65 + idx)}.</strong> ${shuffledRight[idx] || ''}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        break;
     }
 
     html += '</div>';

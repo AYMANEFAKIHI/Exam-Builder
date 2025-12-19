@@ -23,7 +23,7 @@ export interface RegisterData {
 }
 
 // Exam Component Types
-export type ComponentType = 'text' | 'table' | 'qcm' | 'image' | 'header' | 'trueFalse' | 'fillInBlanks' | 'writingArea' | 'exerciseHeader' | 'pageBreak';
+export type ComponentType = 'text' | 'table' | 'qcm' | 'image' | 'header' | 'trueFalse' | 'fillInBlanks' | 'writingArea' | 'exerciseHeader' | 'pageBreak' | 'geometry' | 'timeline' | 'matching';
 
 export interface BaseComponent {
   id: string;
@@ -126,6 +126,50 @@ export interface PageBreakComponent extends BaseComponent {
   type: 'pageBreak';
 }
 
+// Geometry Block - Grid paper for math drawings
+export interface GeometryComponent extends BaseComponent {
+  type: 'geometry';
+  gridType: 'millimeter' | 'dots' | 'squares' | 'isometric';
+  width: number;  // in mm
+  height: number; // in mm
+  instructions?: string;
+  points?: number;
+}
+
+// Timeline Block - Historical events on a horizontal line
+export interface TimelineEvent {
+  id: string;
+  date: string;
+  label: string;
+  showDate: boolean; // If false, student must fill in
+  showLabel: boolean; // If false, student must fill in
+}
+
+export interface TimelineComponent extends BaseComponent {
+  type: 'timeline';
+  title?: string;
+  startYear: number;
+  endYear: number;
+  events: TimelineEvent[];
+  points?: number;
+}
+
+// Matching Block - Two columns to match
+export interface MatchingItem {
+  id: string;
+  text: string;
+}
+
+export interface MatchingComponent extends BaseComponent {
+  type: 'matching';
+  title?: string;
+  leftColumn: MatchingItem[];
+  rightColumn: MatchingItem[];
+  instructions?: string;
+  shuffleRight: boolean; // Mélanger la colonne de droite
+  points?: number;
+}
+
 export type ExamComponent = 
   | HeaderComponent 
   | TextComponent 
@@ -136,7 +180,10 @@ export type ExamComponent =
   | FillInBlanksComponent
   | WritingAreaComponent
   | ExerciseHeaderComponent
-  | PageBreakComponent;
+  | PageBreakComponent
+  | GeometryComponent
+  | TimelineComponent
+  | MatchingComponent;
 
 // Exam Types
 export interface Exam {
