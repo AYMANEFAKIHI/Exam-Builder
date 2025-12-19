@@ -4,20 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useExamStore } from '../store/examStore';
 import ExamPreview from '../components/exam/ExamPreview';
 import { ExamComponent, ComponentType } from '../../../shared/src/types';
-import { Save, Download, Plus, GripVertical, Scissors, Grid3X3, Clock, Link2 } from 'lucide-react';
-import HeaderComponentEditor from '../components/exam/HeaderComponentEditor';
-import TextComponentEditor from '../components/exam/TextComponentEditor';
-import TableComponentEditor from '../components/exam/TableComponentEditor';
-import QCMComponentEditor from '../components/exam/QCMComponentEditor';
-import ImageComponentEditor from '../components/exam/ImageComponentEditor';
-import TrueFalseComponentEditor from '../components/exam/TrueFalseComponentEditor';
-import FillInBlanksComponentEditor from '../components/exam/FillInBlanksComponentEditor';
-import WritingAreaComponentEditor from '../components/exam/WritingAreaComponentEditor';
-import ExerciseHeaderComponentEditor from '../components/exam/ExerciseHeaderComponentEditor';
-import PageBreakComponentEditor from '../components/exam/PageBreakComponentEditor';
-import GeometryComponentEditor from '../components/exam/GeometryComponentEditor';
-import TimelineComponentEditor from '../components/exam/TimelineComponentEditor';
-import MatchingComponentEditor from '../components/exam/MatchingComponentEditor';
+import { Save, Download, Plus, Scissors, Grid3X3, Clock, Link2 } from 'lucide-react';
+// Suppression des imports inutilisés
 import ExamSummary from '../components/exam/ExamSummary';
 import AiMagicButton from '../components/AiMagicButton';
 import { generatePDF } from '../utils/pdfGenerator';
@@ -297,30 +285,7 @@ export default function ExamBuilderPage() {
     }
   };
 
-  const updateComponent = (index: number, updatedComponent: ExamComponent) => {
-    const newComponents = [...components];
-    newComponents[index] = updatedComponent;
-    setComponents(newComponents);
-    updateComponents(newComponents);
-  };
-
-  const deleteComponent = (index: number) => {
-    const newComponents = components.filter((_, i) => i !== index);
-    setComponents(newComponents);
-    updateComponents(newComponents);
-  };
-
-  const duplicateComponent = (index: number) => {
-    const componentToDuplicate = components[index];
-    const newComponent = {
-      ...componentToDuplicate,
-      id: `${componentToDuplicate.type}-${Date.now()}`,
-      order: components.length,
-    };
-    const newComponents = [...components, newComponent];
-    setComponents(newComponents);
-    updateComponents(newComponents);
-  };
+  // Suppression des fonctions utilitaires non utilisées
 
   // (fin des fonctions utilitaires, le code continue normalement)
 
