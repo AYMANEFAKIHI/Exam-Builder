@@ -293,7 +293,7 @@ export default function ExamPreview({ components, onOrderChange }: ExamPreviewPr
         );
 
       default:
-        return null;
+        return <div />;
     }
     // Always return a valid element (never null)
     return <div />;
