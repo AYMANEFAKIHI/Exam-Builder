@@ -154,12 +154,7 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
               <p style="margin: 5px 0;"><strong>Semester:</strong> ${component.semester}</p>
               <p style="margin: 5px 0;"><strong>Duration:</strong> ${component.duration}</p>
             </div>
-            <div style="clear: both; margin-top: 20px; display: flex; gap: 20px;">
-        const textContent = component.latex ? processLatex(component.content) : component.content;
-        html += `
-          <div>
-            ${component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
-            <div>${textC
+            <div style="clear: both;"></div>
           </div>
         `;
         break;
@@ -193,7 +188,8 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
         `;
         break;
 
-      caconst qcmQuestion = component.latex ? processLatex(component.question) : component.question;
+      case 'qcm':
+        const qcmQuestion = component.latex ? processLatex(component.question) : component.question;
         html += `
           <div>
             ${component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
@@ -207,8 +203,7 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
                     <span>${String.fromCharCode(65 + idx)}. ${optionText}</span>
                   </div>
                 `;
-              } </div>
-              `).join('')}
+              }).join('')}
             </div>
           </div>
         `;
@@ -249,7 +244,12 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
                 <tr>
                   <th style="width: 70%;">Énoncé</th>
                   ${component.displayStyle === 'circles' 
-                    ? '<th style="width: 15%; text-al{
+                    ? '<th style="width: 15%; text-align: center;">Vrai</th><th style="width: 15%; text-align: center;">Faux</th>'
+                    : '<th style="width: 15%; text-align: center;">V</th><th style="width: 15%; text-align: center;">F</th>'}
+                </tr>
+              </thead>
+              <tbody>
+                ${component.statements.map(stmt => {
                   const stmtText = stmt.latex ? processLatex(stmt.text) : stmt.text;
                   return `
                     <tr>
@@ -259,20 +259,12 @@ const renderComponentsToHTML = async (title: string, components: ExamComponent[]
                         : '<td style="text-align: center; font-size: 20px; font-weight: bold;">V</td><td style="text-align: center; font-size: 20px; font-weight: bold;">F</td>'}
                     </tr>
                   `;
-                }   <td>${stmt.text}</td>
-                    ${component.displayStyle === 'circles'
-                      ? '<td style="text-align: center;">○</td><td style="text-align: center;">○</td>'
-                      : '<td style="text-align: center; font-size: 20px; font-weight: bold;">V</td><td style="text-align: center; font-size: 20px; font-weight: bold;">F</td>'}
-                  </tr>
-                `).join('')}
-        let fillContent = component.content.replace(/\[([^\]]+)\]/g, '<span style="text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;">___________</span>');
-        if (component.latex) {
-          fillContent = processLatex(fillContent);
-        }
-        html += `
-          <div>
-            ${component.points ? `<span class="points">[${component.points} pts]</span>` : ''}
-            <p style="line-height: 2; white-space: pre-wrap;">${fill
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+        break;
 
       case 'fillInBlanks':
         const processedContent = component.content.replace(/\[([^\]]+)\]/g, '<span style="text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px;">___________</span>');
