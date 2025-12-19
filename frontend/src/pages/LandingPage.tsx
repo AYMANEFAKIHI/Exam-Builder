@@ -68,6 +68,15 @@ export default function LandingPage() {
                 <Play className="w-5 h-5" />
                 <span>{t('hero.demo')}</span>
               </a>
+              <a
+                href="https://portfolio-mu-ten-al9isz6c5k.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center space-x-2 rtl:space-x-reverse bg-gradient-to-r from-pink-500 to-yellow-500 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all"
+              >
+                <span>Mon Portfolio</span>
+                <ArrowRight className="w-5 h-5" />
+              </a>
             </div>
 
             {/* Trust badges */}
