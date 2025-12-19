@@ -1,0 +1,3 @@
+# Don't ignore api folder - we need serverless functions
+!api
+!api/**
