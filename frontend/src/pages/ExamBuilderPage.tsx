@@ -2,8 +2,24 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useExamStore } from '../store/examStore';
-import ExamPreview from '../components/exam/ExamPreview';
-import { ExamComponent, ComponentType } from '../../../shared/src/types';
+import { DndContext, closestCenter } from '@dnd-kit/core';
+import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+// import ExamPreview from '../components/exam/ExamPreview';
+import TextComponentEditor from '../components/exam/TextComponentEditor';
+import TableComponentEditor from '../components/exam/TableComponentEditor';
+import QCMComponentEditor from '../components/exam/QCMComponentEditor';
+import ImageComponentEditor from '../components/exam/ImageComponentEditor';
+import TrueFalseComponentEditor from '../components/exam/TrueFalseComponentEditor';
+import FillInBlanksComponentEditor from '../components/exam/FillInBlanksComponentEditor';
+import WritingAreaComponentEditor from '../components/exam/WritingAreaComponentEditor';
+import ExerciseHeaderComponentEditor from '../components/exam/ExerciseHeaderComponentEditor';
+import HeaderComponentEditor from '../components/exam/HeaderComponentEditor';
+import PageBreakComponentEditor from '../components/exam/PageBreakComponentEditor';
+import GeometryComponentEditor from '../components/exam/GeometryComponentEditor';
+import TimelineComponentEditor from '../components/exam/TimelineComponentEditor';
+import MatchingComponentEditor from '../components/exam/MatchingComponentEditor';
+import type { ExamComponent, ComponentType } from '../../../shared/src/types';
 import { Save, Download, Plus, Scissors, Grid3X3, Clock, Link2 } from 'lucide-react';
 // Suppression des imports inutilisés
 import ExamSummary from '../components/exam/ExamSummary';
@@ -538,21 +554,129 @@ export default function ExamBuilderPage() {
                 </p>
               </div>
             ) : (
-              <ExamPreview
-                title={title}
-                components={components}
-                onOrderChange={(newOrder) => {
-                  setComponents(newOrder);
-                  updateComponents(newOrder);
-                }}
-              />
+              <DndContext collisionDetection={closestCenter} onDragEnd={({active, over}) => {
+                if (over && active.id !== over.id) {
+                  const oldIndex = components.findIndex(i => i.id === active.id);
+                  const newIndex = components.findIndex(i => i.id === over.id);
+                  const newItems = arrayMove(components, oldIndex, newIndex);
+                  setComponents(newItems);
+                  updateComponents(newItems);
+                }
+              }}>
+                <SortableContext items={components.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                  <div className="space-y-4">
+                    {components.map((component, index) => (
+                      <SortableEditorItem
+                        key={component.id}
+                        component={component}
+                        // index={index} (removed, not needed)
+                        updateComponent={(updated: ExamComponent) => {
+                          const newComps = [...components];
+                          newComps[index] = updated;
+                          setComponents(newComps);
+                          updateComponents(newComps);
+                        }}
+                        deleteComponent={() => {
+                          const newComps = components.filter((_, i) => i !== index);
+                          setComponents(newComps);
+                          updateComponents(newComps);
+                        }}
+                        duplicateComponent={() => {
+                          const c = components[index];
+                          const newC = {...c, id: `${c.type}-${Date.now()}`};
+                          const newComps = [...components, newC];
+                          setComponents(newComps);
+                          updateComponents(newComps);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </SortableContext>
+              </DndContext>
             )}
           </div>
         </div>
       </div>
-      
       {/* Floating Exam Summary */}
       <ExamSummary components={components} />
+    </div>
+  );
+}
+
+// Sortable editor item wrapper (déplacé hors du composant principal)
+// import type { ExamComponent } from '../../../shared/src/types';
+
+interface SortableEditorItemProps {
+  component: ExamComponent;
+  updateComponent: (updated: ExamComponent) => void;
+  deleteComponent: () => void;
+  duplicateComponent: () => void;
+}
+
+function SortableEditorItem({ component, updateComponent, deleteComponent, duplicateComponent }: SortableEditorItemProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: component.id });
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    position: 'relative' as const,
+    background: isDragging ? '#f3f4f6' : undefined,
+  };
+  function renderEditor() {
+    if (component.type === 'header') {
+      return (
+        <HeaderComponentEditor
+          data={component}
+          onChange={updateComponent}
+          onDelete={deleteComponent}
+          onDuplicate={duplicateComponent}
+        />
+      );
+    }
+    if (component.type === 'exerciseHeader') {
+      return <ExerciseHeaderComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'text') {
+      return <TextComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'table') {
+      return <TableComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'qcm') {
+      return <QCMComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'image') {
+      return <ImageComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'trueFalse') {
+      return <TrueFalseComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'fillInBlanks') {
+      return <FillInBlanksComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'writingArea') {
+      return <WritingAreaComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'pageBreak') {
+      return <PageBreakComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'geometry') {
+      return <GeometryComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'timeline') {
+      return <TimelineComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    if (component.type === 'matching') {
+      return <MatchingComponentEditor data={component} onChange={updateComponent} onDelete={deleteComponent} onDuplicate={duplicateComponent} />;
+    }
+    return <div />;
+  }
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} className="mb-2">
+      <div {...listeners} className="absolute -left-8 top-4 cursor-move text-gray-400 hover:text-gray-600">
+        <span>::</span>
+      </div>
+      {renderEditor()}
     </div>
   );
 }
