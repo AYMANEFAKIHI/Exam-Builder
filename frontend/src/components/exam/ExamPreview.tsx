@@ -73,6 +73,12 @@ export default function ExamPreview({ components, onOrderChange }: ExamPreviewPr
               {component.studentFields.firstName && <span>Prénom: _____________</span>}
               {component.studentFields.classGroup && <span>Classe: _____________</span>}
             </div>
+            {component.noteBene && component.noteBene.trim() && (
+              <div className="mt-4 border-2 border-red-500 rounded bg-red-50 p-3 flex items-center">
+                <span className="mr-2 text-xl text-red-600 font-bold">⚠️</span>
+                <span className="font-bold text-red-700">{component.noteBene}</span>
+              </div>
+            )}
           </div>
         );
 

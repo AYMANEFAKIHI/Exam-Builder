@@ -44,6 +44,7 @@ export interface HeaderComponent extends BaseComponent {
     firstName: boolean;
     classGroup: boolean;
   };
+  noteBene?: string; // NB field for special instructions
 }
 
 export interface TextComponent extends BaseComponent {

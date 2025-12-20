@@ -39,6 +39,19 @@ export default function HeaderComponentEditor({ data, onChange, onDelete, onDupl
         </div>
       </div>
 
+      {/* NB / Special Instructions Field */}
+      <div className="col-span-2 mt-4">
+        <label className="block text-sm font-semibold text-red-600 mb-2">
+          Notes Particulières / Instructions (NB)
+        </label>
+        <textarea
+          className="w-full border-2 border-red-400 rounded p-2 text-sm focus:ring-red-500 focus:border-red-500 placeholder-red-300"
+          placeholder="Ex: Calculatrice interdite, dictionnaire autorisé..."
+          value={data.noteBene || ''}
+          onChange={e => handleChange('noteBene', e.target.value)}
+          rows={2}
+        />
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Logo Upload */}
         <div className="col-span-2">
