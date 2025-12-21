@@ -46,11 +46,6 @@ export default function ExamBuilderPage() {
   // Auto-save indicator
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // Handler for AI-generated questions
-  const handleAIQuestionsGenerated = (newComponents: ExamComponent[]) => {
-    setComponents([...components, ...newComponents]);
-    updateComponents([...components, ...newComponents]);
-  };
 
   // Auto-save to localStorage
   const autoSave = useCallback(() => {
