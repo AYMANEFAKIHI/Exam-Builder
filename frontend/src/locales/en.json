@@ -12,12 +12,12 @@
       "logout": "Logout"
     },
     "hero": {
-      "badge": "Powered by Google Gemini AI",
+      "badge": "",
       "title": "The Perfect Exam,",
       "titleHighlight": "in just a few clicks.",
       "subtitle": "Save hours of preparation with our intelligent editor.",
       "subtitleBold": "Built for demanding teachers",
-      "subtitleAI": ", powered by AI.",
+      "subtitleAI": "",
       "cta": "Start Creating",
       "demo": "Watch Demo",
       "free": "100% Free",
@@ -34,12 +34,7 @@
         "feature1": "Professional KaTeX rendering",
         "feature2": "4 grid types (mm, dots, squares, iso)"
       },
-      "ai": {
-        "title": "Free AI Assistant",
-        "description": "Generate MCQs and structured exercises instantly with Google Gemini artificial intelligence.",
-        "feature1": "Level-adapted questions",
-        "feature2": "True/False, MCQ, Fill-in-the-blanks"
-      },
+      "ai": {},
       "pdf": {
         "title": "Standard PDF Format",
         "description": "Export your exams in A4 format with fixed academic layout (Logo, Header, Student Area).",
@@ -86,7 +81,7 @@
       "rights": "All rights reserved",
       "education": "Simplifying exam creation for teachers",
       "pdfExport": "Professional PDF export",
-      "aiPowered": "Powered by AI"
+      "aiPowered": ""
     },
     "auth": {
       "signIn": "Sign In",
@@ -141,12 +136,12 @@
       "geometry": "Geometry Area",
       "timeline": "Timeline",
       "matching": "Matching",
-      "aiGenerate": "Generate with AI",
+      "aiGenerate": "",
       "advancedBlocks": "Advanced Blocks",
       "sciences": "Sciences",
       "historyGeo": "History-Geography",
       "layout": "Layout",
-      "aiSection": "Artificial Intelligence",
+      "aiSection": "",
       "emptyExam": "Your exam is empty. Add components to get started.",
       "emptyExamHint": "Click on the components in the left sidebar to add them to your exam.",
       "exportOptions": "Export Options",

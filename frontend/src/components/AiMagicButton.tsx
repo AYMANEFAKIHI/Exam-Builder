@@ -1,3 +1,4 @@
+// (Component removed)
 import { useState } from 'react';
 import { Sparkles, X, Loader2, Wand2, AlertCircle, CheckCircle } from 'lucide-react';
 import { generateQuestionsViaAPI, GeneratedQuestion } from '../services/geminiService';

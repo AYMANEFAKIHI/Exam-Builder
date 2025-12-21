@@ -23,7 +23,6 @@ import type { ExamComponent, ComponentType } from '../../../shared/src/types';
 import { Save, Download, Plus, Scissors, Grid3X3, Clock, Link2 } from 'lucide-react';
 // Suppression des imports inutilisés
 import ExamSummary from '../components/exam/ExamSummary';
-import AiMagicButton from '../components/AiMagicButton';
 import { generatePDF } from '../utils/pdfGenerator';
 import { toast } from 'react-toastify';
 
@@ -531,12 +530,6 @@ export default function ExamBuilderPage() {
                 <span>{t('editor.pageBreak')}</span>
               </button>
               
-              <hr className="my-3 border-gray-300 dark:border-slate-600" />
-              <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2 px-2">✨ {t('editor.aiSection')}</p>
-              <AiMagicButton 
-                onQuestionsGenerated={handleAIQuestionsGenerated}
-                currentComponentCount={components.length}
-              />
             </div>
           </div>
         </div>

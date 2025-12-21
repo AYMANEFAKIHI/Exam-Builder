@@ -41,7 +41,7 @@ export default function Footer() {
             <span className="hidden sm:block">•</span>
             <span>📄 {t('footer.pdfExport')}</span>
             <span className="hidden sm:block">•</span>
-            <span>🤖 {t('footer.aiPowered')}</span>
+            {/* AI-powered text removed */}
           </div>
         </div>
       </div>

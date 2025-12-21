@@ -12,12 +12,12 @@
       "logout": "Déconnexion"
     },
     "hero": {
-      "badge": "Propulsé par l'IA Gemini de Google",
+      "badge": "",
       "title": "L'Examen Parfait,",
       "titleHighlight": "en quelques clics.",
       "subtitle": "Gagnez des heures de préparation grâce à notre éditeur intelligent.",
       "subtitleBold": "Conçu pour les professeurs exigeants",
-      "subtitleAI": ", propulsé par l'IA.",
+      "subtitleAI": "",
       "cta": "Commencer à créer",
       "demo": "Voir la démo",
       "free": "100% Gratuit",
@@ -34,12 +34,7 @@
         "feature1": "Rendu KaTeX professionnel",
         "feature2": "4 types de grilles (mm, points, carrés, iso)"
       },
-      "ai": {
-        "title": "Assistant IA Gratuit",
-        "description": "Générez des QCM et des exercices structurés instantanément grâce à l'intelligence artificielle de Google Gemini.",
-        "feature1": "Questions adaptées au niveau",
-        "feature2": "Vrai/Faux, QCM, Textes à trous"
-      },
+      "ai": {},
       "pdf": {
         "title": "Format Standard PDF",
         "description": "Exportez vos sujets au format A4 avec une mise en page académique fixe (Logo, En-tête, Zone Étudiant).",
@@ -86,7 +81,7 @@
       "rights": "Tous droits réservés",
       "education": "Simplifier la création d'examens pour les enseignants",
       "pdfExport": "Export PDF professionnel",
-      "aiPowered": "Propulsé par l'IA"
+      "aiPowered": ""
     },
     "auth": {
       "signIn": "Connexion",
@@ -141,12 +136,12 @@
       "geometry": "Zone Géométrie",
       "timeline": "Frise Chronologique",
       "matching": "Correspondance",
-      "aiGenerate": "Générer avec l'IA",
+      "aiGenerate": "",
       "advancedBlocks": "Blocs Avancés",
       "sciences": "Sciences",
       "historyGeo": "Histoire-Géo",
       "layout": "Mise en Page",
-      "aiSection": "Intelligence Artificielle",
+      "aiSection": "",
       "emptyExam": "Votre examen est vide. Ajoutez des composants pour commencer.",
       "emptyExamHint": "Cliquez sur les composants dans la barre latérale pour les ajouter.",
       "exportOptions": "Options d'Export",
