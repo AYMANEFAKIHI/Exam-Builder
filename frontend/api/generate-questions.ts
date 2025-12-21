@@ -51,7 +51,7 @@ export default async function handler(request: Request) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro-latest' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.0-pro' });
 
     const systemPrompt = `Tu es un expert en pédagogie et en création d'examens. Tu dois générer exactement ${count} questions à choix multiples (QCM) sur le sujet donné.
 
